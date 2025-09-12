@@ -1,4 +1,6 @@
 #[derive(Copy, Clone, Debug, PartialEq)]
+
+// TODO: don't separate white and black pawns
 pub enum Piece {
     PawnWhite,
     PawnBlack,

@@ -236,14 +236,14 @@ mod pieces_masks {
             let mut col: isize = 0;
             while col < BOARD_FILES as isize {
                 result[square_index(row as usize, col as usize)] =
-                    single_cell_board(row + 1, col + 2) | 
-                    single_cell_board(row + 1, col - 2) | 
-                    single_cell_board(row - 1, col + 2) |
-                    single_cell_board(row - 1, col - 2) |
-                    single_cell_board(row + 2, col + 1) |
-                    single_cell_board(row + 2, col - 1) |
-                    single_cell_board(row - 2, col + 1) |
-                    single_cell_board(row - 2, col - 1);
+                    single_square_board(row + 1, col + 2) | 
+                    single_square_board(row + 1, col - 2) | 
+                    single_square_board(row - 1, col + 2) |
+                    single_square_board(row - 1, col - 2) |
+                    single_square_board(row + 2, col + 1) |
+                    single_square_board(row + 2, col - 1) |
+                    single_square_board(row - 2, col + 1) |
+                    single_square_board(row - 2, col - 1);
                 col += 1;
             }
             row += 1;
@@ -260,14 +260,14 @@ mod pieces_masks {
             let mut col: isize = 0;
             while col < BOARD_FILES as isize {
                 result[square_index(row as usize, col as usize)] =
-                    single_cell_board(row, col + 1)     | 
-                    single_cell_board(row, col - 1)     | 
-                    single_cell_board(row - 1, col + 1) |
-                    single_cell_board(row - 1, col)     |
-                    single_cell_board(row - 1, col - 1) |
-                    single_cell_board(row + 1, col + 1) |
-                    single_cell_board(row + 1, col)     |
-                    single_cell_board(row + 1, col - 1);
+                    single_square_board(row, col + 1)     | 
+                    single_square_board(row, col - 1)     | 
+                    single_square_board(row - 1, col + 1) |
+                    single_square_board(row - 1, col)     |
+                    single_square_board(row - 1, col - 1) |
+                    single_square_board(row + 1, col + 1) |
+                    single_square_board(row + 1, col)     |
+                    single_square_board(row + 1, col - 1);
                 col += 1;
             }
             row += 1;
@@ -285,8 +285,8 @@ mod pieces_masks {
             let mut col: isize = 0;
             while col < BOARD_FILES as isize {
                 let index = square_index(row as usize, col as usize);
-                white[index] = single_cell_board(row + 1, col);
-                black[index] = single_cell_board(row - 1, col);
+                white[index] = single_square_board(row + 1, col);
+                black[index] = single_square_board(row - 1, col);
                 col += 1;                                                               
             }
             row += 1;
@@ -310,9 +310,9 @@ mod pieces_masks {
             assert_eq!(PIECES[Piece::PawnWhite as usize][square_index(3, 4)], 0x0000001000000000);
             assert_eq!(PIECES[Piece::PawnBlack as usize][square_index(3, 4)], 0x0000000000100000);
             assert_eq!(PIECES[Piece::PawnWhite as usize][square_index(7, 3)], 0);
-            assert_eq!(PIECES[Piece::PawnBlack as usize][square_index(7, 3)], single_cell_board(6, 3));
+            assert_eq!(PIECES[Piece::PawnBlack as usize][square_index(7, 3)], single_square_board(6, 3));
             assert_eq!(PIECES[Piece::PawnBlack as usize][square_index(0, 4)], 0);
-            assert_eq!(PIECES[Piece::PawnWhite as usize][square_index(0, 4)], single_cell_board(1, 4));
+            assert_eq!(PIECES[Piece::PawnWhite as usize][square_index(0, 4)], single_square_board(1, 4));
             assert_eq!(PIECES[Piece::Rook as usize][square_index(3, 4)], 0x10101010EF101010);
             assert_eq!(PIECES[Piece::Bishop as usize][square_index(3, 4)], 0x0182442800284482);
             assert_eq!(PIECES[Piece::Queen as usize][square_index(3, 4)], 0x11925438EF385492);
