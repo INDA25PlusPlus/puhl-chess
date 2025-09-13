@@ -14,8 +14,7 @@ bitflags! {
 }
 
 pub struct ChessBoard {
-    pub all_white: Board,
-    pub all_black: Board,
+    pub all_pieces: [Board; PIECE_COLOR_COUNT],
 
     pub white_turn: bool,
     pub castling_availability: CastlingAvailability,
@@ -31,8 +30,7 @@ impl ChessBoard {
     // TODO: Maybe return result instead of panic on failure, even though it will essentially only be used for testing purposes
     pub fn new(fen: &str) -> ChessBoard {
         let mut chess_board: ChessBoard = ChessBoard { 
-            all_white: 0, 
-            all_black: 0, 
+            all_pieces: [0, 0],
             white_turn: true, 
             castling_availability: CastlingAvailability::None, 
             en_passant_mask: 0, 
@@ -64,8 +62,8 @@ impl ChessBoard {
                             _ => unreachable!(),
                     };
                     let all_board= match chr.is_uppercase() {
-                        true => &mut chess_board.all_white,
-                        false => &mut chess_board.all_black, 
+                        true => &mut chess_board.all_pieces[PieceColor::White as usize],
+                        false => &mut chess_board.all_pieces[PieceColor::Black as usize], 
                     };
 
                     *all_board |= square;
@@ -134,8 +132,8 @@ mod tests {
         assert_eq!(chess_board.pieces[PieceType::Rook as usize], 0x8100000000000081);
         assert_eq!(chess_board.pieces[PieceType::Queen as usize], 0x1000000000000010);
         assert_eq!(chess_board.pieces[PieceType::King as usize], 0x0800000000000008);
-        assert_eq!(chess_board.all_white, 0x000000000000ffff);
-        assert_eq!(chess_board.all_black, 0xffff000000000000);
+        assert_eq!(chess_board.all_pieces[PieceColor::White as usize], 0x000000000000ffff);
+        assert_eq!(chess_board.all_pieces[PieceColor::Black as usize], 0xffff000000000000);
         assert_eq!(chess_board.white_turn, true);
         assert_eq!(chess_board.en_passant_mask, 0);
         assert_eq!(chess_board.half_moves, 0);
@@ -148,8 +146,8 @@ mod tests {
         assert_eq!(chess_board.pieces[PieceType::Rook as usize], 0x8100000000000081);
         assert_eq!(chess_board.pieces[PieceType::Queen as usize], 0x1000000000000010);
         assert_eq!(chess_board.pieces[PieceType::King as usize], 0x0800000000000008);
-        assert_eq!(chess_board.all_white, 0x000000000800F7FF);
-        assert_eq!(chess_board.all_black, 0xffff000000000000);
+        assert_eq!(chess_board.all_pieces[PieceColor::White as usize], 0x000000000800F7FF);
+        assert_eq!(chess_board.all_pieces[PieceColor::Black as usize], 0xffff000000000000);
         assert_eq!(chess_board.white_turn, false);
         assert_eq!(chess_board.en_passant_mask, 0x0000000000080000);
         assert_eq!(chess_board.half_moves, 0);

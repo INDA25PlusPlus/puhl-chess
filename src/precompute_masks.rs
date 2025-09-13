@@ -5,7 +5,7 @@ use crate::piece::*;
 // TODO: Make a more consistent naming scheme
 // TODO: Make easy way to visualize hard coded hex bit boards without taking to much space
 // TODO: Don't make this a global constant
-pub const ATTACKS_MASKS: BBMasks = make_lookup();
+pub const BBMASKS: BBMasks = make_lookup();
 
 /// Contains the some precomputed bit board patterns
 pub struct BBMasks {
@@ -190,7 +190,7 @@ mod pieces_masks {
     use super::*;
 
     pub struct Pieces {
-        pub pieces_attacks: [[[Board; BOARD_SIZE]; PIECE_TYPE_COUNT]; PIECE_COLOR_COUNT],
+        pub attacks: [[[Board; BOARD_SIZE]; PIECE_TYPE_COUNT]; PIECE_COLOR_COUNT],
         pub pawn_moves: [[Board; BOARD_SIZE]; PIECE_COLOR_COUNT],
     }
 
@@ -214,7 +214,7 @@ mod pieces_masks {
         }
 
         Pieces {
-            pieces_attacks: [
+            attacks: [
                 [ white_pawn, knight, bishop, rook, queen, king, ],
                 [ black_pawn, knight, bishop, rook, queen, king, ],
             ],
@@ -316,7 +316,7 @@ mod pieces_masks {
         #[test]
         fn test_pieces_attacks_generation() {
             // TODO: Replace with loop; Maybe use create helper module for this
-            const ATTACKS: &[[[u64; BOARD_SIZE]; PIECE_TYPE_COUNT]; PIECE_COLOR_COUNT] = &PIECES.pieces_attacks;
+            const ATTACKS: &[[[u64; BOARD_SIZE]; PIECE_TYPE_COUNT]; PIECE_COLOR_COUNT] = &PIECES.attacks;
             assert_eq!(ATTACKS[PieceColor::White as usize][PieceType::Knight as usize][square_index(3, 4)], 0x0000284400442800);
             assert_eq!(ATTACKS[PieceColor::White as usize][PieceType::Knight as usize][square_index(0, 0)], 0x0000000000020400);
             assert_eq!(ATTACKS[PieceColor::White as usize][PieceType::Pawn as usize][square_index(3, 4)], 0x0000002800000000);
