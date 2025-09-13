@@ -5,20 +5,20 @@ use crate::piece::*;
 // TODO: Make a more consistent naming scheme
 // TODO: Make easy way to visualize hard coded hex bit boards without taking to much space
 // TODO: Don't make this a global constant
-pub const ATTACKS_MASKS: AttacksMasks = make_lookup();
+pub const ATTACKS_MASKS: BBMasks = make_lookup();
 
-/// Contains the attack pattern on an empty board for every possible ray, line and piece
-pub struct AttacksMasks {
+/// Contains the some precomputed bit board patterns
+pub struct BBMasks {
     pub rays: rays_masks::Rays,
     pub lines: lines_masks::Lines,
     pub pieces: pieces_masks::Pieces,
 }
 
-const fn make_lookup() -> AttacksMasks {
+const fn make_lookup() -> BBMasks {
     let rays = rays_masks::generate();
     let lines = lines_masks::generate(&rays);
     let pieces = pieces_masks::generate(&lines);
-    AttacksMasks { rays, lines, pieces }
+    BBMasks { rays, lines, pieces }
 }
 
 mod rays_masks {
@@ -189,24 +189,21 @@ mod lines_masks {
 mod pieces_masks {
     use super::*;
 
-    // pub struct Pieces {
-    //     pub pawn: [BoardPair; BOARD_SIZE],
-    //     pub knight: [Board; BOARD_SIZE],
-    //     pub bishop: [Board; BOARD_SIZE],
-    //     pub rook: [Board; BOARD_SIZE],
-    //     pub queen: [Board; BOARD_SIZE],
-    //     pub king: [Board; BOARD_SIZE],
-    // }
-    pub type Pieces = [[Board; BOARD_SIZE]; PIECE_COUNT];
+    pub struct Pieces {
+        pub pieces_attacks: [[[Board; BOARD_SIZE]; PIECE_TYPE_COUNT]; PIECE_COLOR_COUNT],
+        pub pawn_moves: [[Board; BOARD_SIZE]; PIECE_COLOR_COUNT],
+    }
 
     // Generates the attack patter for every piece on every square on an empty board
     pub const fn generate(lines: &lines_masks::Lines) -> Pieces {
-        let mut rook = [0; BOARD_SIZE];
-        let mut bishop = [0; BOARD_SIZE];
-        let mut queen = [0; BOARD_SIZE];
-        let knight = generate_attacks_knight();
-        let king = generate_attacks_king();
         let (white_pawn, black_pawn) = generate_attacks_pawn();
+        let knight = generate_attacks_knight();
+        let mut bishop = [0; BOARD_SIZE];
+        let mut rook = [0; BOARD_SIZE];
+        let mut queen = [0; BOARD_SIZE];
+        let king = generate_attacks_king();
+
+        let (white_pawn_moves, black_pawn_moves) = generate_moves_pawn();
         
         let mut i = 0;
         while i < BOARD_SIZE {
@@ -216,16 +213,32 @@ mod pieces_masks {
             i += 1;
         }
 
-        let mut pieces: Pieces = [[0; BOARD_SIZE]; PIECE_COUNT];
-        pieces[Piece::PawnWhite as usize] = white_pawn;
-        pieces[Piece::PawnBlack as usize] = black_pawn;
-        pieces[Piece::Knight as usize] = knight;
-        pieces[Piece::Bishop as usize] = bishop;
-        pieces[Piece::Rook as usize] = rook;
-        pieces[Piece::Queen as usize] = queen;
-        pieces[Piece::King as usize] = king;
+        Pieces {
+            pieces_attacks: [
+                [ white_pawn, knight, bishop, rook, queen, king, ],
+                [ black_pawn, knight, bishop, rook, queen, king, ],
+            ],
+            pawn_moves: [
+                white_pawn_moves,
+                black_pawn_moves,
+            ]
+        }
+    }
 
-        pieces
+    const fn generate_moves_pawn() -> ([Board; BOARD_SIZE], [Board; BOARD_SIZE]) {
+        let mut white: [Board; BOARD_SIZE] = [0; BOARD_SIZE];
+        let mut black: [Board; BOARD_SIZE] = [0; BOARD_SIZE];
+
+        let mut index: usize = 0;
+        while index < BOARD_SIZE {
+            let rank = rank_index(index) as isize;
+            let file = file_index(index) as isize;
+            white[index] = single_square_board(rank + 1, file);
+            black[index] = single_square_board(rank - 1, file);
+            index += 1;
+        }
+
+        return (white, black)
     }
 
     const fn generate_attacks_knight() -> [Board; BOARD_SIZE] {
@@ -280,19 +293,16 @@ mod pieces_masks {
         let mut white: [Board; BOARD_SIZE] = [0; BOARD_SIZE];
         let mut black: [Board; BOARD_SIZE] = [0; BOARD_SIZE];
 
-        let mut row: isize = 0;
-        while row < BOARD_RANKS as isize {
-            let mut col: isize = 0;
-            while col < BOARD_FILES as isize {
-                let index = square_index(row as usize, col as usize);
-                white[index] = single_square_board(row + 1, col);
-                black[index] = single_square_board(row - 1, col);
-                col += 1;                                                               
-            }
-            row += 1;
+        let mut index: usize = 0;
+        while index < BOARD_SIZE {
+            let rank = rank_index(index) as isize;
+            let file = file_index(index) as isize;
+            white[index] = single_square_board(rank + 1, file + 1) | single_square_board(rank + 1, file - 1);
+            black[index] = single_square_board(rank - 1, file + 1) | single_square_board(rank - 1, file - 1);
+            index += 1;
         }
 
-        (white, black)
+        return (white, black)
     }
 
     #[cfg(test)]
@@ -304,19 +314,31 @@ mod pieces_masks {
         const PIECES: Pieces = generate(&LINES);
 
         #[test]
-        fn test_pieces_generation() {
-            assert_eq!(PIECES[Piece::Knight as usize][square_index(3, 4)], 0x0000284400442800);
-            assert_eq!(PIECES[Piece::Knight as usize][square_index(0, 0)], 0x0000000000020400);
-            assert_eq!(PIECES[Piece::PawnWhite as usize][square_index(3, 4)], 0x0000001000000000);
-            assert_eq!(PIECES[Piece::PawnBlack as usize][square_index(3, 4)], 0x0000000000100000);
-            assert_eq!(PIECES[Piece::PawnWhite as usize][square_index(7, 3)], 0);
-            assert_eq!(PIECES[Piece::PawnBlack as usize][square_index(7, 3)], single_square_board(6, 3));
-            assert_eq!(PIECES[Piece::PawnBlack as usize][square_index(0, 4)], 0);
-            assert_eq!(PIECES[Piece::PawnWhite as usize][square_index(0, 4)], single_square_board(1, 4));
-            assert_eq!(PIECES[Piece::Rook as usize][square_index(3, 4)], 0x10101010EF101010);
-            assert_eq!(PIECES[Piece::Bishop as usize][square_index(3, 4)], 0x0182442800284482);
-            assert_eq!(PIECES[Piece::Queen as usize][square_index(3, 4)], 0x11925438EF385492);
-            assert_eq!(PIECES[Piece::King as usize][square_index(3, 4)], 0x0000003828380000);
+        fn test_pieces_attacks_generation() {
+            // TODO: Replace with loop; Maybe use create helper module for this
+            const ATTACKS: &[[[u64; BOARD_SIZE]; PIECE_TYPE_COUNT]; PIECE_COLOR_COUNT] = &PIECES.pieces_attacks;
+            assert_eq!(ATTACKS[PieceColor::White as usize][PieceType::Knight as usize][square_index(3, 4)], 0x0000284400442800);
+            assert_eq!(ATTACKS[PieceColor::White as usize][PieceType::Knight as usize][square_index(0, 0)], 0x0000000000020400);
+            assert_eq!(ATTACKS[PieceColor::White as usize][PieceType::Pawn as usize][square_index(3, 4)], 0x0000002800000000);
+            assert_eq!(ATTACKS[PieceColor::Black as usize][PieceType::Pawn as usize][square_index(3, 4)], 0x0000000000280000);
+            assert_eq!(ATTACKS[PieceColor::White as usize][PieceType::Pawn as usize][square_index(7, 3)], 0);
+            assert_eq!(ATTACKS[PieceColor::Black as usize][PieceType::Pawn as usize][square_index(7, 3)], 0x0014000000000000);
+            assert_eq!(ATTACKS[PieceColor::White as usize][PieceType::Pawn as usize][square_index(0, 4)], 0x0000000000002800);
+            assert_eq!(ATTACKS[PieceColor::Black as usize][PieceType::Pawn as usize][square_index(0, 4)], 0);
+            assert_eq!(ATTACKS[PieceColor::White as usize][PieceType::Rook as usize][square_index(3, 4)], 0x10101010EF101010);
+            assert_eq!(ATTACKS[PieceColor::White as usize][PieceType::Bishop as usize][square_index(3, 4)], 0x0182442800284482);
+            assert_eq!(ATTACKS[PieceColor::White as usize][PieceType::Queen as usize][square_index(3, 4)], 0x11925438EF385492);
+            assert_eq!(ATTACKS[PieceColor::White as usize][PieceType::King as usize][square_index(3, 4)], 0x0000003828380000);
+        }
+
+        #[test]
+        fn test_pawn_moves_generation() {
+            const MOVES: &[[Board; BOARD_SIZE]; PIECE_COLOR_COUNT] = &PIECES.pawn_moves;
+            assert_eq!(MOVES[PieceColor::White as usize][square_index(3, 4)], 0x0000001000000000);
+            assert_eq!(MOVES[PieceColor::Black as usize][square_index(3, 4)], 0x0000000000100000);
+            assert_eq!(MOVES[PieceColor::White as usize][square_index(7, 3)], 0);
+            assert_eq!(MOVES[PieceColor::Black as usize][square_index(7, 3)], single_square_board(6, 3));
+            assert_eq!(MOVES[PieceColor::Black as usize][square_index(0, 4)], 0);
         }
     }
 }

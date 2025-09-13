@@ -1,9 +1,8 @@
 #[derive(Copy, Clone, Debug, PartialEq)]
 
-// TODO: don't separate white and black pawns
-pub enum Piece {
-    PawnWhite,
-    PawnBlack,
+#[repr(usize)]
+pub enum PieceType {
+    Pawn,
     Knight,
     Bishop,
     Rook,
@@ -11,6 +10,12 @@ pub enum Piece {
     King,
 }
 
-pub const PIECE_COUNT: usize = 7;
+pub const PIECE_TYPE_COUNT: usize = 6;
 
-pub const ALL_PIECES: [Piece; PIECE_COUNT] = [Piece::PawnWhite, Piece::PawnBlack, Piece::Knight, Piece::Bishop, Piece::Rook, Piece::Queen, Piece::King];
+#[repr(usize)]
+pub enum PieceColor {
+    White = 0,
+    Black = 1,
+}
+
+pub const PIECE_COLOR_COUNT: usize = 2;

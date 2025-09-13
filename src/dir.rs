@@ -68,7 +68,7 @@ impl Dir {
             Dir::SouthEast => Dir::NorthWest,
             Dir::South => Dir::North,
             Dir::SouthWest => Dir::NorthEast,
-            Dir::West => Dir::East
+            Dir::West => Dir::East,
             Dir::NorthWest => Dir::SouthEast,
         }
     }

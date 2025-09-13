@@ -23,7 +23,7 @@ pub struct ChessBoard {
     pub half_moves: u32,            // Half moves since last pawn move or capture. Used for fify-move rule
     pub full_moves: u32,            // Full moves since start
 
-    pub pieces: [Board; PIECE_COUNT],
+    pub pieces: [Board; PIECE_TYPE_COUNT],
 }
 
 impl ChessBoard {
@@ -38,7 +38,7 @@ impl ChessBoard {
             en_passant_mask: 0, 
             half_moves: 0, 
             full_moves: 0, 
-            pieces: [0; PIECE_COUNT]
+            pieces: [0; PIECE_TYPE_COUNT],
         };
 
         pub fn handle_placement_encoding(placement: &str, chess_board: &mut ChessBoard) {
@@ -55,13 +55,12 @@ impl ChessBoard {
                     let square = single_square_board(rank_index(square_index) as isize, (file_index(square_index)) as isize);
 
                     let piece_type = match chr {
-                            'P' => &mut chess_board.pieces[Piece::PawnWhite as usize],
-                            'p' => &mut chess_board.pieces[Piece::PawnBlack as usize],
-                            'N' | 'n' => &mut chess_board.pieces[Piece::Knight as usize],
-                            'B' | 'b' => &mut chess_board.pieces[Piece::Bishop as usize],
-                            'R' | 'r' => &mut chess_board.pieces[Piece::Rook as usize],
-                            'Q' | 'q' => &mut chess_board.pieces[Piece::Queen as usize],
-                            'K' | 'k' => &mut chess_board.pieces[Piece::King as usize],
+                            'P' | 'p' => &mut chess_board.pieces[PieceType::Pawn as usize],
+                            'N' | 'n' => &mut chess_board.pieces[PieceType::Knight as usize],
+                            'B' | 'b' => &mut chess_board.pieces[PieceType::Bishop as usize],
+                            'R' | 'r' => &mut chess_board.pieces[PieceType::Rook as usize],
+                            'Q' | 'q' => &mut chess_board.pieces[PieceType::Queen as usize],
+                            'K' | 'k' => &mut chess_board.pieces[PieceType::King as usize],
                             _ => unreachable!(),
                     };
                     let all_board= match chr.is_uppercase() {
@@ -129,13 +128,12 @@ mod tests {
     fn test_fen_decoding() {
         // Chess start position
         let chess_board = ChessBoard::new("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
-        assert_eq!(chess_board.pieces[Piece::PawnWhite as usize], 0x000000000000ff00);
-        assert_eq!(chess_board.pieces[Piece::PawnBlack as usize], 0x00ff000000000000);
-        assert_eq!(chess_board.pieces[Piece::Knight as usize], 0x4200000000000042);
-        assert_eq!(chess_board.pieces[Piece::Bishop as usize], 0x2400000000000024);
-        assert_eq!(chess_board.pieces[Piece::Rook as usize], 0x8100000000000081);
-        assert_eq!(chess_board.pieces[Piece::Queen as usize], 0x1000000000000010);
-        assert_eq!(chess_board.pieces[Piece::King as usize], 0x0800000000000008);
+        assert_eq!(chess_board.pieces[PieceType::Pawn as usize], 0x00ff00000000ff00);
+        assert_eq!(chess_board.pieces[PieceType::Knight as usize], 0x4200000000000042);
+        assert_eq!(chess_board.pieces[PieceType::Bishop as usize], 0x2400000000000024);
+        assert_eq!(chess_board.pieces[PieceType::Rook as usize], 0x8100000000000081);
+        assert_eq!(chess_board.pieces[PieceType::Queen as usize], 0x1000000000000010);
+        assert_eq!(chess_board.pieces[PieceType::King as usize], 0x0800000000000008);
         assert_eq!(chess_board.all_white, 0x000000000000ffff);
         assert_eq!(chess_board.all_black, 0xffff000000000000);
         assert_eq!(chess_board.white_turn, true);
@@ -144,13 +142,12 @@ mod tests {
         assert_eq!(chess_board.full_moves, 1);
 
         let chess_board = ChessBoard::new("rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1");
-        assert_eq!(chess_board.pieces[Piece::PawnWhite as usize], 0x000000000800F700);
-        assert_eq!(chess_board.pieces[Piece::PawnBlack as usize], 0x00ff000000000000);
-        assert_eq!(chess_board.pieces[Piece::Knight as usize], 0x4200000000000042);
-        assert_eq!(chess_board.pieces[Piece::Bishop as usize], 0x2400000000000024);
-        assert_eq!(chess_board.pieces[Piece::Rook as usize], 0x8100000000000081);
-        assert_eq!(chess_board.pieces[Piece::Queen as usize], 0x1000000000000010);
-        assert_eq!(chess_board.pieces[Piece::King as usize], 0x0800000000000008);
+        assert_eq!(chess_board.pieces[PieceType::Pawn as usize], 0x00ff00000800F700);
+        assert_eq!(chess_board.pieces[PieceType::Knight as usize], 0x4200000000000042);
+        assert_eq!(chess_board.pieces[PieceType::Bishop as usize], 0x2400000000000024);
+        assert_eq!(chess_board.pieces[PieceType::Rook as usize], 0x8100000000000081);
+        assert_eq!(chess_board.pieces[PieceType::Queen as usize], 0x1000000000000010);
+        assert_eq!(chess_board.pieces[PieceType::King as usize], 0x0800000000000008);
         assert_eq!(chess_board.all_white, 0x000000000800F7FF);
         assert_eq!(chess_board.all_black, 0xffff000000000000);
         assert_eq!(chess_board.white_turn, false);
