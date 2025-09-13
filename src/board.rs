@@ -1,11 +1,5 @@
 pub type Board = u64;
 
-#[derive(Copy, Clone, Debug)]
-pub struct BoardPair {
-    pub white: Board,
-    pub black: Board,
-}
-
 pub const BOARD_RANKS: usize = 8;
 pub const BOARD_FILES: usize = 8;
 pub const BOARD_SIZE: usize = BOARD_RANKS * BOARD_FILES;
