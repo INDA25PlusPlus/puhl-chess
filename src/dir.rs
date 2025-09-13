@@ -59,6 +59,19 @@ impl Dir {
             _ => None
         }
     }
+
+    pub fn opposite(dir: Dir) -> Dir {
+        match dir {
+            Dir::North => Dir::South,
+            Dir::NorthEast => Dir::SouthWest,
+            Dir::East => Dir::West,
+            Dir::SouthEast => Dir::NorthWest,
+            Dir::South => Dir::North,
+            Dir::SouthWest => Dir::NorthEast,
+            Dir::West => Dir::East
+            Dir::NorthWest => Dir::SouthEast,
+        }
+    }
 }
 
 #[cfg(test)]
