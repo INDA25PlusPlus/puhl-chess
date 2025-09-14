@@ -55,7 +55,7 @@ fn attacks_to_square_sliding(chess_board: ChessBoard, square_index: usize, by_si
     attacks
 }
 
-fn all_square_which_block_check(chess_board: ChessBoard, square_index: usize, piece_color: PieceColor) -> Board {
+fn all_squares_which_block_check(chess_board: ChessBoard, square_index: usize, piece_color: PieceColor) -> Board {
     let rank = rank_index(square_index);
     let file = file_index(square_index);
     let square = single_square_board(rank as isize, file as isize);
@@ -63,38 +63,36 @@ fn all_square_which_block_check(chess_board: ChessBoard, square_index: usize, pi
     // Should not be called with the king
     assert_eq!(square & chess_board.pieces[PieceType::King as usize], 0);
 
+    // Should only return one king
     let king_square: Board = chess_board.pieces[PieceType::King as usize] & chess_board.all_pieces[piece_color as usize];
-    let king_index = (king_square & king_square.wrapping_neg()) as usize;
+    let king_index = king_square.trailing_zeros() as usize;
     // We don't include square because if it is pinned, then we should treat the whole line between king and the attacking piece as moveable
     let potential_pieces = (chess_board.all_pieces[PieceColor::White as usize] | chess_board.all_pieces[PieceColor::Black as usize]) & !square;
     
     // === Non sliding pieces ===
-    let mut attacks = BBMASKS.pieces.attacks[PieceColor::opposite(piece_color) as usize][PieceType::Knight as usize][king_index]
+    let mut attacks = BBMASKS.pieces.attacks[piece_color as usize][PieceType::Knight as usize][king_index]
                        & chess_board.pieces[PieceType::Knight as usize];
-    attacks |= BBMASKS.pieces.attacks[PieceColor::opposite(piece_color) as usize][PieceType::Pawn as usize][king_index]
+    attacks |= BBMASKS.pieces.attacks[piece_color as usize][PieceType::Pawn as usize][king_index]
                        & chess_board.pieces[PieceType::Pawn as usize];
     attacks &= chess_board.all_pieces[PieceColor::opposite(piece_color) as usize];
     let attacks_count = attacks.count_ones();
 
+    // === Sliding pieces ===
+    let attacks_sliding = attacks_to_square_sliding(chess_board, king_index, PieceColor::opposite(piece_color), potential_pieces);
+    let attacks_sliding_count = attacks_sliding.count_ones();
+
+    // No attacks to king => no move will allow check
+    if attacks_count + attacks_sliding_count == 0 { return Board::MAX }
     // More than one attack on king => we have to move the king, so no move is possible for this piece
-    if attacks_count > 1 { return 0; }
+    if attacks_count + attacks_sliding_count > 1 { return 0; };
     if attacks_count == 1 { return attacks; }
 
-    // === Sliding pieces ===
-    let attacks = attacks_to_square_sliding(chess_board, king_index, PieceColor::opposite(piece_color), potential_pieces);
-    let attacks_count = attacks.count_ones();
-
-    // No attacks to king => No move will create check
-    if attacks_count == 0 { return Board::MAX }
-    // More than one attack on king => we have to move the king, so no move is possible for this piece
-    if attacks_count > 1 { return 0; };
-
-    // The ifs makes sure attack_index is equal to one
-    let attack_index = (attacks & attacks.wrapping_neg()) as usize;
+    // The ifs makes sure attacks only has one bitset
+    let attack_index = attacks_sliding.trailing_zeros() as usize;
     let dir = Dir::FROM_SQUARES_PAIRS[king_index][attack_index].unwrap();   // Should never return None
     // Create segment between king and attacking piece
     // TODO: Maybe precompute these segments
-    (BBMASKS.rays[king_index][dir as usize] & BBMASKS.rays[attack_index][Dir::opposite(dir) as usize]) | attacks;
+    (BBMASKS.rays[king_index][dir as usize] & BBMASKS.rays[attack_index][Dir::opposite(dir) as usize]) | attacks_sliding
 }
 
 // fn all_squares_that_block_check(chess_board: ChessBoard, square_index: usize) -> Board {
@@ -196,3 +194,81 @@ pub trait PawnMover {
     // (1) Get all moves which blocks a check
     // (2) 
 }
+
+ mod tests {
+        use super::*;
+
+        #[test]
+        fn test_get_piece_moves() {
+            // TODO: Replace with loop; Maybe use create helper module for this
+            let index = square_index(3, 3);
+            let moves = get_piece_moves(index, BBMASKS.pieces.attacks[PieceColor::White as usize][PieceType::Bishop as usize][index], 0xFFFF00000000FFFF);
+            assert_eq!(moves, 0x0041221400142200);
+
+            let index = square_index(3, 3);
+            let moves = get_piece_moves(index, BBMASKS.pieces.attacks[PieceColor::White as usize][PieceType::Queen as usize][index], 0xEAA9489994605561);
+            assert_eq!(moves, 0x0001021C141C2A49);
+
+            let index = square_index(3, 4);
+            let moves = get_piece_moves(index, BBMASKS.pieces.attacks[PieceColor::White as usize][PieceType::Rook as usize][index], 0xEAA9489994605561);
+            assert_eq!(moves, 0x00000010EC101000);
+        }
+
+        #[test]
+        fn test_get_piece_attacks() {
+            let index = square_index(3, 3);
+            let moves = get_piece_attacks(index, BBMASKS.pieces.attacks[PieceColor::White as usize][PieceType::Bishop as usize][index], 0xFFFF00000000FFFF);
+            assert_eq!(moves, 0x0041000000002200);
+
+            let index = square_index(3, 3);
+            let moves = get_piece_attacks(index, BBMASKS.pieces.attacks[PieceColor::White as usize][PieceType::Queen as usize][index], 0xEAA9489994605561);
+            assert_eq!(moves, 0x0001001814000041);
+
+            let index = square_index(3, 4);
+            let moves = get_piece_attacks(index, BBMASKS.pieces.attacks[PieceColor::White as usize][PieceType::Rook as usize][index], 0xEAA9489994605561);
+            assert_eq!(moves, 0x0000001084001000);    
+        }
+
+        #[test]
+        fn test_all_squares_which_block_check() {
+            // https://lichess.org/editor/4k3/7p/2n2Pp1/2bq1bK1/p2P2PR/P1p2P2/1RP5/3BQ3_w_-_-_0_1?color=white
+            let chess_board = ChessBoard::new("4k3/7p/2n2Pp1/2bq1bK1/p2P2PR/P1p2P2/1RP5/3BQ3 w - - 0 1");
+            let squares = all_squares_which_block_check(chess_board, square_index(4, 2), PieceColor::Black);
+            assert_eq!(squares, 0x0008080808080808);
+
+            // https://lichess.org/editor/8/7p/2n2Pp1/2bqkbK1/p2P2PR/P1p2P2/1RP5/3BQ3_w_-_-_0_1?color=white
+            let chess_board = ChessBoard::new("8/7p/2n2Pp1/2bqkbK1/p2P2PR/P1p2P2/1RP5/3BQ3 w - - 0 1");
+            let squares = all_squares_which_block_check(chess_board, square_index(4, 2), PieceColor::Black);
+            assert_eq!(squares, 0);
+
+            // https://lichess.org/editor/8/7p/2n2Pp1/2bq1bK1/p2P2PR/P1p1kP2/1RP5/3BQ3_w_-_-_0_1?color=white
+            let chess_board = ChessBoard::new("8/7p/2n2Pp1/2bq1bK1/p2P2PR/P1p1kP2/1RP5/3BQ3 w - - 0 1");
+            let squares = all_squares_which_block_check(chess_board, square_index(4, 2), PieceColor::Black);
+            assert_eq!(squares, 0x0000000000000808);
+
+            // https://lichess.org/editor/8/7p/2n2Pp1/2bq1bK1/p2P2PR/P1p2P2/1RPk4/3BQ3_w_-_-_0_1?color=white
+            let chess_board = ChessBoard::new("8/7p/2n2Pp1/2bq1bK1/p2P2PR/P1p2P2/1RPk4/3BQ3 w - - 0 1");
+            let squares = all_squares_which_block_check(chess_board, square_index(4, 2), PieceColor::Black);
+            assert_eq!(squares, 0x0000000000000008);
+
+            // https://lichess.org/editor/4k3/7p/2n2Pp1/K1bq4/p2Pb1PR/P1p2P2/1RP5/3BQ3_w_-_-_0_1?color=white
+            let chess_board = ChessBoard::new("4k3/7p/2n2Pp1/K1bq4/p2Pb1PR/P1p2P2/1RP5/3BQ3 w - - 0 1");
+            let squares = all_squares_which_block_check(chess_board, square_index(3, 3), PieceColor::Black);
+            assert_eq!(squares, 0x0008080808080808);
+
+            // https://lichess.org/editor/4k3/7p/2n2Pp1/K1bq4/p2Pb1PR/P1p2P2/1RP5/3BQ3_w_-_-_0_1?color=white
+            let chess_board = ChessBoard::new("4k3/5P1p/2n3p1/K1bq4/p2Pb1PR/P1p2P2/1RP5/3BQ3 w - - 0 1");
+            let squares = all_squares_which_block_check(chess_board, square_index(3, 3), PieceColor::Black);
+            assert_eq!(squares, 0);
+
+            // https://lichess.org/editor/4k3/7p/2n2Pp1/K1bq4/p2Pb1PR/P1p2P2/1RP5/3BQ3_w_-_-_0_1?color=white
+            let chess_board = ChessBoard::new("4k3/6Pp/2n1R1p1/K1bq4/p2Pb1PR/P1p2P2/2P5/3BQ3 w - - 0 1");
+            let squares = all_squares_which_block_check(chess_board, square_index(3, 3), PieceColor::Black);
+            assert_eq!(squares, 0x0008080000000000);
+
+            // https://lichess.org/editor/8/6Pp/2n1R1p1/K1bq4/p2PbkPR/P1p2P2/2P5/3BQ3_w_-_-_0_1?color=white
+            let chess_board = ChessBoard::new("8/6Pp/2n1R1p1/K1bq4/p2PbkPR/P1p2P2/2P5/3BQ3 w - - 0 1");
+            let squares = all_squares_which_block_check(chess_board, square_index(3, 3), PieceColor::Black);
+            assert_eq!(squares, Board::MAX);
+        }
+    }

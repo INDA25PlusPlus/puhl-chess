@@ -13,14 +13,24 @@ def u64_to_matrix(number):
 
 if __name__ == "__main__":
     matrix = [
+        "11101010",
+        "10101001",
+        "01001000",
+        "10011001",
+        "10010100",
+        "01100000",
+        "01010101",
+        "01100001",
+    ]
+    matrix = [
         "00000000",
         "00000000",
         "00000000",
-        "00000010",
         "00000000",
         "00000000",
         "00000000",
         "00000000",
+        "00001000",
     ]
 
     number = matrix_to_u64(matrix)
@@ -29,6 +39,6 @@ if __name__ == "__main__":
     print(f"Hex   : 0x{number:016X}")
 
     print("\nFrom number to matrix")
-    restored = u64_to_matrix(0x804000100804)
+    restored = u64_to_matrix(2260595906707456)
     for row in restored:
         print(row)
