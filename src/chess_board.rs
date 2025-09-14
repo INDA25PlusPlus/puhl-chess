@@ -4,20 +4,25 @@ use bitflags::bitflags;
 
 
 bitflags! {
+    #[derive(PartialEq)]
     pub struct CastlingAvailability: usize {
-        const None = 0;
-        const WhiteKingSide  = 1;
-        const WhiteQueenSide = 2;
-        const BlackKingSide  = 4;
-        const BlackQueenSide = 8;
+        const None      = 0;
+        const KingSide  = 1;
+        const QueenSide = 2;
+        // const WhiteKingSide  = 1;
+        // const WhiteQueenSide = 2;
+        // const BlackKingSide  = 4;
+        // const BlackQueenSide = 8;
     }
 }
+
+pub const CASTLING_AVAILABILITY_SIZE: usize = 4;
 
 pub struct ChessBoard {
     pub all_pieces: [Board; PIECE_COLOR_COUNT],
 
     pub white_turn: bool,
-    pub castling_availability: CastlingAvailability,
+    pub castling_availability: [CastlingAvailability; PIECE_COLOR_COUNT],
     pub en_passant_mask: Board,     // Contains the square a pawn has just passed while moving two squares
     pub half_moves: u32,            // Half moves since last pawn move or capture. Used for fify-move rule
     pub full_moves: u32,            // Full moves since start
@@ -32,7 +37,7 @@ impl ChessBoard {
         let mut chess_board: ChessBoard = ChessBoard { 
             all_pieces: [0, 0],
             white_turn: true, 
-            castling_availability: CastlingAvailability::None, 
+            castling_availability: [CastlingAvailability::None; PIECE_COLOR_COUNT],
             en_passant_mask: 0, 
             half_moves: 0, 
             full_moves: 0, 
@@ -78,13 +83,15 @@ impl ChessBoard {
 
         fn handle_castling_availability_encoding(availabilities: &str, chess_board: &mut ChessBoard) {
             for availability in availabilities.chars() {
-                chess_board.castling_availability |= match availability {
-                    'K' => CastlingAvailability::WhiteKingSide,
-                    'Q' => CastlingAvailability::WhiteQueenSide,
-                    'k' => CastlingAvailability::BlackKingSide,
-                    'q' => CastlingAvailability::BlackQueenSide,
-                    '-' => CastlingAvailability::None,
-                    _ => CastlingAvailability::None,
+                match availability {
+                    'K' => chess_board.castling_availability[PieceColor::White as usize] |= CastlingAvailability::KingSide,
+                    'Q' => chess_board.castling_availability[PieceColor::White as usize] |= CastlingAvailability::QueenSide,
+                    'k' => chess_board.castling_availability[PieceColor::Black as usize] |= CastlingAvailability::KingSide,
+                    'q' => chess_board.castling_availability[PieceColor::Black as usize] |= CastlingAvailability::QueenSide,
+                    '-' => { chess_board.castling_availability[PieceColor::White as usize] = CastlingAvailability::None;
+                             chess_board.castling_availability[PieceColor::Black as usize] = CastlingAvailability::None;
+                    },
+                    _ => (),
                 };
             }
         }
