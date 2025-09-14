@@ -1,7 +1,9 @@
 use std::thread::current;
 
 use crate::board::*;
+use crate::chess_board;
 use crate::chess_board::*;
+use crate::piece;
 use crate::precompute_masks::*;
 use crate::dir::*;
 use crate::piece::*;
@@ -36,17 +38,37 @@ fn get_piece_attacks(square: usize, mut potential_squares: Board, all_pieces: Bo
 // https://www.chessprogramming.org/Square_Attacked_By#AnyAttackBySide
 // https://www.chessprogramming.org/Checks_and_Pinned_Pieces_%28Bitboards%29
 // Attacks to a square from sliding pieces 
-fn attacks_to_square_sliding(chess_board: ChessBoard, square_index: usize, by_side: PieceColor, potential_pieces: Board) -> Board {
+fn attacks_to_square_sliding(chess_board: &ChessBoard, square_index: usize, by_side: PieceColor, potential_pieces: Board) -> Board {
     let opposite_side = PieceColor::opposite(by_side);
     // let all_pieces = chess_board.all_pieces[PieceColor::White as usize] | chess_board.all_pieces[PieceColor::Black as usize];
     let mut attacks: Board = 0;
 
-    // Non sliding pieces
+    // None sliding pieces
     // for piece_type in [PieceType::Pawn, PieceType::Knight, PieceType::King] {
     //     let pieces = chess_board.pieces[piece_type as usize] & chess_board.all_pieces[by_side as usize];
     //     attacks |= BBMASKS.pieces.attacks[opposite_side as usize][piece_type as usize][square_index] & pieces
     // }
 
+    for piece_type in [PieceType::Bishop, PieceType::Rook] {
+        let pieces = (chess_board.pieces[piece_type as usize] | chess_board.pieces[PieceType::Queen as usize]) & chess_board.all_pieces[by_side as usize];
+        attacks |= get_piece_attacks(square_index, BBMASKS.pieces.attacks[opposite_side as usize][piece_type as usize][square_index], potential_pieces) & pieces;
+    }
+
+    attacks
+}
+
+fn attacks_to_square(chess_board: &ChessBoard, square_index: usize, by_side: PieceColor, potential_pieces: Board) -> Board {
+    let opposite_side = PieceColor::opposite(by_side);
+    // let all_pieces = chess_board.all_pieces[PieceColor::White as usize] | chess_board.all_pieces[PieceColor::Black as usize];
+    let mut attacks: Board = 0;
+
+    // None sliding pieces
+    for piece_type in [PieceType::Pawn, PieceType::Knight, PieceType::King] {
+        let pieces = chess_board.pieces[piece_type as usize] & chess_board.all_pieces[by_side as usize];
+        attacks |= BBMASKS.pieces.attacks[opposite_side as usize][piece_type as usize][square_index] & pieces
+    }
+
+    // Sliding pieces
     for piece_type in [PieceType::Bishop, PieceType::Rook] {
         let pieces = (chess_board.pieces[piece_type as usize] | chess_board.pieces[PieceType::Queen as usize]) & chess_board.all_pieces[by_side as usize];
         attacks |= get_piece_attacks(square_index, BBMASKS.pieces.attacks[opposite_side as usize][piece_type as usize][square_index], potential_pieces) & pieces
@@ -55,7 +77,7 @@ fn attacks_to_square_sliding(chess_board: ChessBoard, square_index: usize, by_si
     attacks
 }
 
-fn all_squares_which_block_check(chess_board: ChessBoard, square_index: usize, piece_color: PieceColor) -> Board {
+fn all_squares_which_block_check(chess_board: &ChessBoard, square_index: usize, piece_color: PieceColor) -> Board {
     let rank = rank_index(square_index);
     let file = file_index(square_index);
     let square = single_square_board(rank as isize, file as isize);
@@ -78,7 +100,7 @@ fn all_squares_which_block_check(chess_board: ChessBoard, square_index: usize, p
     let attacks_count = attacks.count_ones();
 
     // === Sliding pieces ===
-    let attacks_sliding = attacks_to_square_sliding(chess_board, king_index, PieceColor::opposite(piece_color), potential_pieces);
+    let attacks_sliding = attacks_to_square_sliding(&chess_board, king_index, PieceColor::opposite(piece_color), potential_pieces);
     let attacks_sliding_count = attacks_sliding.count_ones();
 
     // No attacks to king => no move will allow check
@@ -95,104 +117,55 @@ fn all_squares_which_block_check(chess_board: ChessBoard, square_index: usize, p
     (BBMASKS.rays[king_index][dir as usize] & BBMASKS.rays[attack_index][Dir::opposite(dir) as usize]) | attacks_sliding
 }
 
-// fn all_squares_that_block_check(chess_board: ChessBoard, square_index: usize) -> Board {
-//     let rank = rank_index(square_index);
-//     let file = file_index(square_index);
-//     let square = single_square_board(rank as isize, file as isize);
-
-//     // Should not be called with the king
-//     assert_eq!(square & chess_board.pieces[Piece::King as usize], 0);
-
-//     // Remove piece square from board
-//     let current_side = if chess_board.white_turn { chess_board.all_white } else { chess_board.all_black } & !square;
-//     let opposite_side = if chess_board.white_turn { chess_board.all_black } else {chess_board.all_white } & !square;
-
-//     // Contains the positions positions the piece can go to without its own king being in check
-//     let mut current_mask = Board::MAX;
-
-//     // The pieces king
-//     let king_square = chess_board.pieces[Piece::King as usize] & current_side;
-//     let king_index = (king_square & king_square.wrapping_neg()) as usize;
-
-//     // Go through all the pieces types
-//     for piece_type in [Piece::PawnWhite, Piece::PawnBlack, Piece::Knight, Piece::Bishop, Piece::Rook, Piece::Queen] {
-//         // Goes through all the individual pieces on each piece types board
-//         let mut piece_board: Board = chess_board.pieces[piece_type as usize] & opposite_side;
-//         while piece_board != 0 {
-//             // Singles out the LSB in board
-//             let square = (piece_board & piece_board.wrapping_neg()) as Board;
-//             let square_index = piece_board.trailing_zeros() as usize;
-//             // Removes the LSB in board
-//             piece_board &= piece_board - 1;
-
-//             // Checks all the pieces the opposite piece attacks
-//             let pieces_attacked = ATTACKS_MASKS.pieces[piece_type as usize][square_index] & current_side;
-//             // Continues with another pieces if it doesn't attack the king
-//             if king_square & pieces_attacked == 0 { continue };
-//             // 'Ands' the mask with what positions blocks the check from this opposite piece
-//             //      We 'and' it because if there are multiple pieces attacking the king, then we have to block each of those pieces
-//             match piece_type {
-//                 Piece::Bishop | Piece::Rook | Piece::Queen => {
-//                     let dir = Dir::FROM_SQUARES_PAIRS[king_index][square_index].unwrap();   // Should never return None
-//                     current_mask &= (ATTACKS_MASKS.rays[king_index][dir as usize] & ATTACKS_MASKS.rays[square_index][Dir::opposite(dir) as usize]) | square;    // TODO: Precompute a segment table
-//                 }
-//                 Piece::PawnWhite | Piece::PawnBlack | Piece::Knight => {
-//                     current_mask &= square;
-//                 }
-//                 _ => { unreachable!() }
-//             }
-//         }
-//     }
-
-//     current_mask
-// }
-
-pub trait PieceMover {
-    // fn positions(&self) -> Board;
-    /// Returns the legal moves of this piece
-    fn get_moves(&self, chess_board: ChessBoard, square: usize) -> Board;
+fn get_legal_moves_bishop(chess_board: &ChessBoard, square: usize, piece_color: PieceColor) -> Board {
+    let pseudo_legal_moves = get_piece_moves(square, BBMASKS.pieces.attacks[piece_color as usize][PieceType::Bishop as usize][square], chess_board.all_pieces[PieceColor::White as usize] | chess_board.all_pieces[PieceColor::Black as usize]) & !chess_board.all_pieces[piece_color as usize];
+    let check_blocking_moves = all_squares_which_block_check(&chess_board, square, piece_color);
+    check_blocking_moves & pseudo_legal_moves
 }
 
-pub trait BlockCheckMover: PieceMover {
-    // Returns all moves for piece which prevents check
-    // Returns all squares which prevents check
-    //      OBS: if from multiple angles then you can't block it
-    // For king specifically, do get_pieces_moves for every enemy piece and union them together to check, then and with the kings eight pseudo possible moves
+fn get_legal_moves_rook(chess_board: &ChessBoard, square: usize, piece_color: PieceColor) -> Board {
+    let pseudo_legal_moves = get_piece_moves(square, BBMASKS.pieces.attacks[piece_color as usize][PieceType::Rook as usize][square], chess_board.all_pieces[PieceColor::White as usize] | chess_board.all_pieces[PieceColor::Black as usize]) & !chess_board.all_pieces[piece_color as usize];
+    let check_blocking_moves = all_squares_which_block_check(&chess_board, square, piece_color);
+    check_blocking_moves & pseudo_legal_moves
 }
 
-pub trait SlidingMover: PieceMover {
+fn get_legal_moves_queen(chess_board: &ChessBoard, square: usize, piece_color: PieceColor) -> Board{
+    get_legal_moves_bishop(chess_board, square, piece_color) | get_legal_moves_rook(chess_board, square, piece_color)
 }
 
-/* struct PawnMover;
-impl PawnMover<{ ATTACKS_MASKS.pieces[Piece::PawnWhite as usize][0] }> {
-    fn tmp() {
-        ATTACKS_MASKS
-    } 
-} */
-
-pub trait KnightMover:  {
-
+fn get_legal_moves_knight(chess_board: ChessBoard, square: usize, piece_color: PieceColor) -> Board {
+    let pseudo_legal_moves = BBMASKS.pieces.attacks[piece_color as usize][PieceType::Knight as usize][square] & !chess_board.all_pieces[piece_color as usize];
+    let check_blocking_moves = all_squares_which_block_check(&chess_board, square, piece_color);
+    pseudo_legal_moves & check_blocking_moves
 }
 
-pub trait BishopMover {
-
+// TODO: Rename square index to just square and square to square_bit_board everywhere?
+fn get_legal_moves_pawn(chess_board: ChessBoard, square: usize, piece_color: PieceColor) -> Board {
+    let mut pseudo_legal_moves = BBMASKS.pieces.attacks[piece_color as usize][PieceType::Pawn as usize][square] & (chess_board.all_pieces[PieceColor::opposite(piece_color) as usize] | chess_board.en_passant_mask);
+    if (BBMASKS.pieces.pawn_moves[piece_color as usize][square] & (chess_board.all_pieces[PieceColor::White as usize] | chess_board.all_pieces[PieceColor::Black as usize])) == 0 {
+        pseudo_legal_moves |= BBMASKS.pieces.pawn_moves[piece_color as usize][square];
+        pseudo_legal_moves |= BBMASKS.pieces.pawn_double_moves[piece_color as usize][square] & !(chess_board.all_pieces[PieceColor::White as usize] | chess_board.all_pieces[PieceColor::Black as usize]);
+    }
+    let check_blocking_moves = all_squares_which_block_check(&chess_board, square, piece_color);
+    pseudo_legal_moves | check_blocking_moves
 }
 
-pub trait RookMover {
-
-}
-
-pub trait QueenMover {
-
-}
-
-pub trait KingMover {
-
-}
-
-pub trait PawnMover {
-    // (1) Get all moves which blocks a check
-    // (2) 
+// NOTE: Could also just calculate every square opposite side is attacking and take the intersection between it and the king attacks bit mask
+// TODO: Maybe check if that is faster
+fn get_legal_moves_king(chess_board: ChessBoard, square: usize, piece_color: PieceColor) -> Board {
+    let bb_square = single_square_board(rank_index(square) as isize, file_index(square) as isize);
+    let mut attacks = BBMASKS.pieces.attacks[piece_color as usize][PieceType::King as usize][square];
+    let mut remaining_checks = attacks;
+    while remaining_checks != 0 {
+        let index = remaining_checks.trailing_zeros() as usize;
+        let bb_index= single_square_board(rank_index(index) as isize, file_index(index) as isize);
+        if attacks_to_square(&chess_board, index, PieceColor::opposite(piece_color), (chess_board.all_pieces[PieceColor::White as usize] | chess_board.all_pieces[PieceColor::Black as usize]) & !bb_square) != 0 {
+            attacks &= !bb_index;
+        }
+        // Remove LSb
+        remaining_checks &= remaining_checks - 1;
+    }
+    attacks
 }
 
  mod tests {
@@ -233,42 +206,47 @@ pub trait PawnMover {
         fn test_all_squares_which_block_check() {
             // https://lichess.org/editor/4k3/7p/2n2Pp1/2bq1bK1/p2P2PR/P1p2P2/1RP5/3BQ3_w_-_-_0_1?color=white
             let chess_board = ChessBoard::new("4k3/7p/2n2Pp1/2bq1bK1/p2P2PR/P1p2P2/1RP5/3BQ3 w - - 0 1");
-            let squares = all_squares_which_block_check(chess_board, square_index(4, 2), PieceColor::Black);
+            let squares = all_squares_which_block_check(&chess_board, square_index(4, 2), PieceColor::Black);
             assert_eq!(squares, 0x0008080808080808);
 
             // https://lichess.org/editor/8/7p/2n2Pp1/2bqkbK1/p2P2PR/P1p2P2/1RP5/3BQ3_w_-_-_0_1?color=white
             let chess_board = ChessBoard::new("8/7p/2n2Pp1/2bqkbK1/p2P2PR/P1p2P2/1RP5/3BQ3 w - - 0 1");
-            let squares = all_squares_which_block_check(chess_board, square_index(4, 2), PieceColor::Black);
+            let squares = all_squares_which_block_check(&chess_board, square_index(4, 2), PieceColor::Black);
             assert_eq!(squares, 0);
 
             // https://lichess.org/editor/8/7p/2n2Pp1/2bq1bK1/p2P2PR/P1p1kP2/1RP5/3BQ3_w_-_-_0_1?color=white
             let chess_board = ChessBoard::new("8/7p/2n2Pp1/2bq1bK1/p2P2PR/P1p1kP2/1RP5/3BQ3 w - - 0 1");
-            let squares = all_squares_which_block_check(chess_board, square_index(4, 2), PieceColor::Black);
+            let squares = all_squares_which_block_check(&chess_board, square_index(4, 2), PieceColor::Black);
             assert_eq!(squares, 0x0000000000000808);
 
             // https://lichess.org/editor/8/7p/2n2Pp1/2bq1bK1/p2P2PR/P1p2P2/1RPk4/3BQ3_w_-_-_0_1?color=white
             let chess_board = ChessBoard::new("8/7p/2n2Pp1/2bq1bK1/p2P2PR/P1p2P2/1RPk4/3BQ3 w - - 0 1");
-            let squares = all_squares_which_block_check(chess_board, square_index(4, 2), PieceColor::Black);
+            let squares = all_squares_which_block_check(&chess_board, square_index(4, 2), PieceColor::Black);
             assert_eq!(squares, 0x0000000000000008);
 
             // https://lichess.org/editor/4k3/7p/2n2Pp1/K1bq4/p2Pb1PR/P1p2P2/1RP5/3BQ3_w_-_-_0_1?color=white
             let chess_board = ChessBoard::new("4k3/7p/2n2Pp1/K1bq4/p2Pb1PR/P1p2P2/1RP5/3BQ3 w - - 0 1");
-            let squares = all_squares_which_block_check(chess_board, square_index(3, 3), PieceColor::Black);
+            let squares = all_squares_which_block_check(&chess_board, square_index(3, 3), PieceColor::Black);
             assert_eq!(squares, 0x0008080808080808);
 
             // https://lichess.org/editor/4k3/7p/2n2Pp1/K1bq4/p2Pb1PR/P1p2P2/1RP5/3BQ3_w_-_-_0_1?color=white
             let chess_board = ChessBoard::new("4k3/5P1p/2n3p1/K1bq4/p2Pb1PR/P1p2P2/1RP5/3BQ3 w - - 0 1");
-            let squares = all_squares_which_block_check(chess_board, square_index(3, 3), PieceColor::Black);
+            let squares = all_squares_which_block_check(&chess_board, square_index(3, 3), PieceColor::Black);
             assert_eq!(squares, 0);
 
             // https://lichess.org/editor/4k3/7p/2n2Pp1/K1bq4/p2Pb1PR/P1p2P2/1RP5/3BQ3_w_-_-_0_1?color=white
             let chess_board = ChessBoard::new("4k3/6Pp/2n1R1p1/K1bq4/p2Pb1PR/P1p2P2/2P5/3BQ3 w - - 0 1");
-            let squares = all_squares_which_block_check(chess_board, square_index(3, 3), PieceColor::Black);
+            let squares = all_squares_which_block_check(&chess_board, square_index(3, 3), PieceColor::Black);
             assert_eq!(squares, 0x0008080000000000);
 
             // https://lichess.org/editor/8/6Pp/2n1R1p1/K1bq4/p2PbkPR/P1p2P2/2P5/3BQ3_w_-_-_0_1?color=white
             let chess_board = ChessBoard::new("8/6Pp/2n1R1p1/K1bq4/p2PbkPR/P1p2P2/2P5/3BQ3 w - - 0 1");
-            let squares = all_squares_which_block_check(chess_board, square_index(3, 3), PieceColor::Black);
+            let squares = all_squares_which_block_check(&chess_board, square_index(3, 3), PieceColor::Black);
             assert_eq!(squares, Board::MAX);
+
+            // https://lichess.org/editor/1q6/3k2pp/2n1R3/2b2K2/p2Pb1BR/P1p2P2/2P5/4Q3_w_-_-_0_1?color=white
+            let chess_board = ChessBoard::new("1q6/3k2pp/2n1R3/2b2K2/p2Pb1BR/P1p2P2/2P5/4Q3 w - - 0 1");
+            let squares = all_squares_which_block_check(&chess_board, square_index(2, 2), PieceColor::White);
+            assert_eq!(squares, 0x0000000008000000);
         }
     }
