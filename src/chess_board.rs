@@ -2,9 +2,9 @@ use crate::board::*;
 use crate::piece::*;
 use bitflags::bitflags;
 
-
+// TODO: Put castling into its own file
 bitflags! {
-    #[derive(PartialEq)]
+    #[derive(PartialEq, Clone, Copy)]
     pub struct CastlingAvailability: usize {
         const None      = 0;
         const KingSide  = 1;

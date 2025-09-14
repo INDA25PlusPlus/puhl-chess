@@ -117,30 +117,30 @@ fn all_squares_which_block_check(chess_board: &ChessBoard, square_index: usize, 
     (BBMASKS.rays[king_index][dir as usize] & BBMASKS.rays[attack_index][Dir::opposite(dir) as usize]) | attacks_sliding
 }
 
-fn get_legal_moves_bishop(chess_board: &ChessBoard, square: usize, piece_color: PieceColor) -> Board {
+pub fn get_legal_moves_bishop(chess_board: &ChessBoard, square: usize, piece_color: PieceColor) -> Board {
     let pseudo_legal_moves = get_piece_moves(square, BBMASKS.pieces.attacks[piece_color as usize][PieceType::Bishop as usize][square], chess_board.all_pieces[PieceColor::White as usize] | chess_board.all_pieces[PieceColor::Black as usize]) & !chess_board.all_pieces[piece_color as usize];
     let check_blocking_moves = all_squares_which_block_check(&chess_board, square, piece_color);
     check_blocking_moves & pseudo_legal_moves
 }
 
-fn get_legal_moves_rook(chess_board: &ChessBoard, square: usize, piece_color: PieceColor) -> Board {
+pub fn get_legal_moves_rook(chess_board: &ChessBoard, square: usize, piece_color: PieceColor) -> Board {
     let pseudo_legal_moves = get_piece_moves(square, BBMASKS.pieces.attacks[piece_color as usize][PieceType::Rook as usize][square], chess_board.all_pieces[PieceColor::White as usize] | chess_board.all_pieces[PieceColor::Black as usize]) & !chess_board.all_pieces[piece_color as usize];
     let check_blocking_moves = all_squares_which_block_check(&chess_board, square, piece_color);
     check_blocking_moves & pseudo_legal_moves
 }
 
-fn get_legal_moves_queen(chess_board: &ChessBoard, square: usize, piece_color: PieceColor) -> Board{
+pub fn get_legal_moves_queen(chess_board: &ChessBoard, square: usize, piece_color: PieceColor) -> Board{
     get_legal_moves_bishop(chess_board, square, piece_color) | get_legal_moves_rook(chess_board, square, piece_color)
 }
 
-fn get_legal_moves_knight(chess_board: &ChessBoard, square: usize, piece_color: PieceColor) -> Board {
+pub fn get_legal_moves_knight(chess_board: &ChessBoard, square: usize, piece_color: PieceColor) -> Board {
     let pseudo_legal_moves = BBMASKS.pieces.attacks[piece_color as usize][PieceType::Knight as usize][square] & !chess_board.all_pieces[piece_color as usize];
     let check_blocking_moves = all_squares_which_block_check(&chess_board, square, piece_color);
     pseudo_legal_moves & check_blocking_moves
 }
 
 // TODO: Rename square index to just square and square to square_bit_board everywhere?
-fn get_legal_moves_pawn(chess_board: &ChessBoard, square: usize, piece_color: PieceColor) -> Board {
+pub fn get_legal_moves_pawn(chess_board: &ChessBoard, square: usize, piece_color: PieceColor) -> Board {
     let mut pseudo_legal_moves = BBMASKS.pieces.attacks[piece_color as usize][PieceType::Pawn as usize][square] & (chess_board.all_pieces[PieceColor::opposite(piece_color) as usize] | chess_board.en_passant_mask);
     if (BBMASKS.pieces.pawn_moves[piece_color as usize][square] & (chess_board.all_pieces[PieceColor::White as usize] | chess_board.all_pieces[PieceColor::Black as usize])) == 0 {
         pseudo_legal_moves |= BBMASKS.pieces.pawn_moves[piece_color as usize][square];
@@ -152,7 +152,7 @@ fn get_legal_moves_pawn(chess_board: &ChessBoard, square: usize, piece_color: Pi
 
 // NOTE: Could also just calculate every square opposite side is attacking and take the intersection between it and the king attacks bit mask
 // TODO: Maybe check if that is faster
-fn get_legal_moves_king(chess_board: &ChessBoard, square: usize, piece_color: PieceColor) -> Board {
+pub fn get_legal_moves_king(chess_board: &ChessBoard, square: usize, piece_color: PieceColor) -> Board {
     // Calculate all legal "normal" moves
     let all_pieces = chess_board.all_pieces[PieceColor::White as usize] | chess_board.all_pieces[PieceColor::Black as usize];
     let bb_square = single_square_board(rank_index(square) as isize, file_index(square) as isize);

@@ -4,3 +4,4 @@ pub mod dir;
 pub mod game;
 pub mod chess_board;
 pub mod piece;
+pub mod moves;
