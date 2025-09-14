@@ -1,2 +1,2 @@
 - Use Zobrist hashing for repetition checking
-- Switch the encoding so it start from the bottom left and ends in the top right, follows more align with normal board representation
+- Switch the encoding so it start from the bottom left and ends in the top right, more align with normal board representation
