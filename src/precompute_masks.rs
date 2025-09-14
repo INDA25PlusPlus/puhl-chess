@@ -194,6 +194,7 @@ mod pieces_masks {
         pub attacks: [[[Board; BOARD_SIZE]; PIECE_TYPE_COUNT]; PIECE_COLOR_COUNT],
         pub pawn_moves: [[Board; BOARD_SIZE]; PIECE_COLOR_COUNT],
         pub pawn_double_moves: [[Board; BOARD_SIZE]; PIECE_COLOR_COUNT],
+        pub en_passant_attack: [[Board; BOARD_SIZE]; PIECE_COLOR_COUNT],
         // TODO: Also add the castling option from the rooks side
         pub castling_moves: [[[Board; BOARD_SIZE]; CASTLING_AVAILABILITY_SIZE]; PIECE_COLOR_COUNT],
     }
@@ -209,6 +210,7 @@ mod pieces_masks {
 
         let (white_pawn_moves, black_pawn_moves) = generate_moves_pawn();
         let (white_pawn_double_moves, black_pawn_double_moves) = generate_double_moves_pawn();
+        let (white_en_passant, black_en_passant) = generate_en_passant();
         let castling_moves = generate_castling_moves();
         
         let mut i = 0;
@@ -232,11 +234,32 @@ mod pieces_masks {
                 white_pawn_double_moves,
                 black_pawn_double_moves,
             ],
-            castling_moves: castling_moves
+            castling_moves: castling_moves,
+            en_passant_attack: [
+                white_en_passant,
+                black_en_passant,
+            ]
         }
     }
 
-    // TODO: Make this return the correct type used in the BBMASKS instead of tuple
+    const fn generate_en_passant() -> ([Board; BOARD_SIZE], [Board; BOARD_SIZE]) {
+        let mut white: [Board; BOARD_SIZE] = [0; BOARD_SIZE];
+        let mut black: [Board; BOARD_SIZE] = [0; BOARD_SIZE];
+
+        let white_rank = 2;
+        let black_rank = 5;
+        
+        let mut file = 0;
+        while file < BOARD_FILES {
+            white[square_index(white_rank, file) as usize] = single_square_board((white_rank + 1) as isize, file as isize);
+            black[square_index(black_rank, file) as usize] = single_square_board((black_rank - 1) as isize, file as isize);
+            file += 1;
+        }
+
+        (white, black)
+    }
+
+    // TODO: Make this return the correct type used in the Pieces struct instead of tuple
     const fn generate_moves_pawn() -> ([Board; BOARD_SIZE], [Board; BOARD_SIZE]) {
         let mut white: [Board; BOARD_SIZE] = [0; BOARD_SIZE];
         let mut black: [Board; BOARD_SIZE] = [0; BOARD_SIZE];
