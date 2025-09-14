@@ -192,6 +192,7 @@ mod pieces_masks {
     pub struct Pieces {
         pub attacks: [[[Board; BOARD_SIZE]; PIECE_TYPE_COUNT]; PIECE_COLOR_COUNT],
         pub pawn_moves: [[Board; BOARD_SIZE]; PIECE_COLOR_COUNT],
+        pub pawn_double_moves: [[Board; BOARD_SIZE]; PIECE_COLOR_COUNT],
     }
 
     // Generates the attack patter for every piece on every square on an empty board
@@ -204,6 +205,7 @@ mod pieces_masks {
         let king = generate_attacks_king();
 
         let (white_pawn_moves, black_pawn_moves) = generate_moves_pawn();
+        let (white_pawn_double_moves, black_pawn_double_moves) = generate_double_moves_pawn();
         
         let mut i = 0;
         while i < BOARD_SIZE {
@@ -221,6 +223,10 @@ mod pieces_masks {
             pawn_moves: [
                 white_pawn_moves,
                 black_pawn_moves,
+            ], 
+            pawn_double_moves: [
+                white_pawn_double_moves,
+                black_pawn_double_moves,
             ]
         }
     }
@@ -239,6 +245,23 @@ mod pieces_masks {
         }
 
         return (white, black)
+    }
+
+    const fn generate_double_moves_pawn() -> ([Board; BOARD_SIZE], [Board; BOARD_SIZE]) {
+        let mut white: [Board; BOARD_SIZE] = [0; BOARD_SIZE];
+        let mut black: [Board; BOARD_SIZE] = [0; BOARD_SIZE];
+
+        let white_rank = 1;
+        let black_rank = 6;
+        
+        let mut file = 0;
+        while file < BOARD_FILES {
+            white[square_index(white_rank, file) as usize] = single_square_board((white_rank + 2) as isize, file as isize);
+            black[square_index(black_rank, file) as usize] = single_square_board((black_rank - 2) as isize, file as isize);
+            file += 1;
+        }
+
+        (white, black)
     }
 
     const fn generate_attacks_knight() -> [Board; BOARD_SIZE] {
@@ -339,6 +362,15 @@ mod pieces_masks {
             assert_eq!(MOVES[PieceColor::White as usize][square_index(7, 3)], 0);
             assert_eq!(MOVES[PieceColor::Black as usize][square_index(7, 3)], single_square_board(6, 3));
             assert_eq!(MOVES[PieceColor::Black as usize][square_index(0, 4)], 0);
+        }
+
+        fn test_pawn_double_moves_generation() {
+            const MOVES: &[[Board; BOARD_SIZE]; PIECE_COLOR_COUNT] = &PIECES.pawn_double_moves;
+            assert_eq!(MOVES[PieceColor::White as usize][square_index(3, 4)], 0);
+            assert_eq!(MOVES[PieceColor::Black as usize][square_index(3, 4)], 0);
+            assert_eq!(MOVES[PieceColor::White as usize][square_index(1, 3)], single_square_board(3, 3));
+            assert_eq!(MOVES[PieceColor::Black as usize][square_index(7, 3)], 0);
+            assert_eq!(MOVES[PieceColor::Black as usize][square_index(6, 4)], single_square_board(4, 4));
         }
     }
 }
