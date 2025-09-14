@@ -1,6 +1,7 @@
 use crate::board::*;
 use crate::dir::*;
 use crate::piece::*;
+use crate::chess_board::*;
 
 // TODO: Make a more consistent naming scheme
 // TODO: Make easy way to visualize hard coded hex bit boards without taking to much space
@@ -193,6 +194,8 @@ mod pieces_masks {
         pub attacks: [[[Board; BOARD_SIZE]; PIECE_TYPE_COUNT]; PIECE_COLOR_COUNT],
         pub pawn_moves: [[Board; BOARD_SIZE]; PIECE_COLOR_COUNT],
         pub pawn_double_moves: [[Board; BOARD_SIZE]; PIECE_COLOR_COUNT],
+        // TODO: Also add the castling option from the rooks side
+        pub castling_moves: [[[Board; BOARD_SIZE]; CASTLING_AVAILABILITY_SIZE]; PIECE_COLOR_COUNT],
     }
 
     // Generates the attack patter for every piece on every square on an empty board
@@ -206,6 +209,7 @@ mod pieces_masks {
 
         let (white_pawn_moves, black_pawn_moves) = generate_moves_pawn();
         let (white_pawn_double_moves, black_pawn_double_moves) = generate_double_moves_pawn();
+        let castling_moves = generate_castling_moves();
         
         let mut i = 0;
         while i < BOARD_SIZE {
@@ -227,10 +231,12 @@ mod pieces_masks {
             pawn_double_moves: [
                 white_pawn_double_moves,
                 black_pawn_double_moves,
-            ]
+            ],
+            castling_moves: castling_moves
         }
     }
 
+    // TODO: Make this return the correct type used in the BBMASKS instead of tuple
     const fn generate_moves_pawn() -> ([Board; BOARD_SIZE], [Board; BOARD_SIZE]) {
         let mut white: [Board; BOARD_SIZE] = [0; BOARD_SIZE];
         let mut black: [Board; BOARD_SIZE] = [0; BOARD_SIZE];
@@ -262,6 +268,23 @@ mod pieces_masks {
         }
 
         (white, black)
+    }
+
+    const fn generate_castling_moves() -> [[[Board; BOARD_SIZE]; CASTLING_AVAILABILITY_SIZE]; PIECE_COLOR_COUNT] {
+        let mut white = [[0 as Board; BOARD_SIZE]; CASTLING_AVAILABILITY_SIZE];
+        let mut black = [[0 as Board; BOARD_SIZE]; CASTLING_AVAILABILITY_SIZE];
+
+        const WHITE_IDX: usize = square_index(0, 3);
+        white[CastlingAvailability::KingSide.bits()][WHITE_IDX] = single_square_board(0, 1);
+        white[CastlingAvailability::QueenSide.bits()][WHITE_IDX] = single_square_board(0, 5);
+        white[CastlingAvailability::KingSide.bits() | CastlingAvailability::QueenSide.bits()][WHITE_IDX] = single_square_board(0, 1) | single_square_board(0, 5);
+
+        const BLACK_IDX: usize = square_index(7, 3);
+        black[CastlingAvailability::KingSide.bits()][BLACK_IDX] = single_square_board(7, 1);
+        black[CastlingAvailability::QueenSide.bits()][BLACK_IDX] = single_square_board(7, 5);
+        black[CastlingAvailability::KingSide.bits() | CastlingAvailability::QueenSide.bits()][BLACK_IDX] = single_square_board(7, 1) | single_square_board(7, 5);
+
+        [ white, black ]
     }
 
     const fn generate_attacks_knight() -> [Board; BOARD_SIZE] {
@@ -371,6 +394,16 @@ mod pieces_masks {
             assert_eq!(MOVES[PieceColor::White as usize][square_index(1, 3)], single_square_board(3, 3));
             assert_eq!(MOVES[PieceColor::Black as usize][square_index(7, 3)], 0);
             assert_eq!(MOVES[PieceColor::Black as usize][square_index(6, 4)], single_square_board(4, 4));
+        }
+
+        fn test_castle_moves_generation() {
+            let MOVES = &PIECES.castling_moves;
+            assert_eq!(MOVES[PieceColor::White as usize][CastlingAvailability::KingSide.bits()][square_index(3, 4)], 0);
+            assert_eq!(MOVES[PieceColor::White as usize][CastlingAvailability::KingSide.bits()][square_index(0, 3)], 0x2);
+            assert_eq!(MOVES[PieceColor::White as usize][CastlingAvailability::KingSide.bits()][square_index(1, 3)], 0);
+            assert_eq!(MOVES[PieceColor::White as usize][CastlingAvailability::QueenSide.bits()][square_index(0, 2)], 0);
+            assert_eq!(MOVES[PieceColor::Black as usize][CastlingAvailability::KingSide.bits() | CastlingAvailability::QueenSide.bits()][square_index(0, 2)], 0x2200000000000000);
+            assert_eq!(MOVES[PieceColor::Black as usize][CastlingAvailability::QueenSide.bits()][square_index(0, 2)], 0x2000000000000000);
         }
     }
 }
