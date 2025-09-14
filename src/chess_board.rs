@@ -152,5 +152,20 @@ mod tests {
         assert_eq!(chess_board.en_passant_mask, 0x0000000000080000);
         assert_eq!(chess_board.half_moves, 0);
         assert_eq!(chess_board.full_moves, 1);
+
+        // https://lichess.org/editor/8/3k3p/2n2Pp1/2bq1bK1/p2P2PR/P1p2P2/1RP5/3BQ3_w_-_-_0_1?color=white
+        let chess_board = ChessBoard::new("8/3k3p/2n2Pp1/2bq1bK1/p2P2PR/P1p2P2/1RP5/3BQ3 w - - 0 1");
+        assert_eq!(chess_board.pieces[PieceType::Pawn as usize], 0x1060092A42000);
+        assert_eq!(chess_board.pieces[PieceType::Knight as usize], 0x0000200000000000);
+        assert_eq!(chess_board.pieces[PieceType::Bishop as usize], 0x0000002400000010);
+        assert_eq!(chess_board.pieces[PieceType::Rook as usize], 0x0000000001004000);
+        assert_eq!(chess_board.pieces[PieceType::Queen as usize], 0x0000001000000008);
+        assert_eq!(chess_board.pieces[PieceType::King as usize], 0x0010000200000000);
+        assert_eq!(chess_board.all_pieces[PieceColor::White as usize], 0x0000040213846018);
+        assert_eq!(chess_board.all_pieces[PieceColor::Black as usize], 0x0011223480200000);
+        assert_eq!(chess_board.white_turn, true);
+        assert_eq!(chess_board.en_passant_mask, 0);
+        assert_eq!(chess_board.half_moves, 0);
+        assert_eq!(chess_board.full_moves, 1);
     }
 }
