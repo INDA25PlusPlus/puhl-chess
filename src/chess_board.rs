@@ -25,6 +25,7 @@ pub struct ChessBoard {
     pub white_turn: bool,
     pub castling_availability: [CastlingAvailability; PIECE_COLOR_COUNT],
     pub en_passant_mask: Board,     // Contains the square a pawn has just passed while moving two squares
+    pub promotion_mask: Board,
     pub half_moves: u32,            // Half moves since last pawn move or capture. Used for fify-move rule
     pub full_moves: u32,            // Full moves since start
 
@@ -40,6 +41,7 @@ impl ChessBoard {
             white_turn: true, 
             castling_availability: [CastlingAvailability::None; PIECE_COLOR_COUNT],
             en_passant_mask: 0, 
+            promotion_mask: 0,
             half_moves: 0, 
             full_moves: 0, 
             pieces: [0; PIECE_TYPE_COUNT],

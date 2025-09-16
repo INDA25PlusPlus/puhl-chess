@@ -39,6 +39,6 @@ if __name__ == "__main__":
     print(f"Hex   : 0x{number:016X}")
 
     print("\nFrom number to matrix")
-    restored = u64_to_matrix(2)
+    restored = u64_to_matrix(9295429630892704896)
     for row in restored:
         print(row)

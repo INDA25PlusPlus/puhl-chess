@@ -39,7 +39,24 @@ mod tests {
                         PieceType::King => move_king(&mut chess_board_clone, index, current_move),
                     }
                     chess_board_clone.white_turn = !chess_board_clone.white_turn;
-                    count += count_moves(&chess_board_clone, depth - 1);
+                    if chess_board_clone.promotion_mask != 0 {
+                        // Remove pawn
+                        chess_board_clone.pieces[PieceType::Pawn as usize] &= !chess_board_clone.promotion_mask;
+                        for new_piece in [ PieceType::Knight, PieceType::Bishop, PieceType::Rook, PieceType::Queen ] {
+                            // Add new piece
+                            chess_board_clone.pieces[new_piece as usize] |= chess_board_clone.promotion_mask;
+
+                            let promotion_mask = chess_board_clone.promotion_mask;
+                            chess_board_clone.promotion_mask = 0;
+                            count += count_moves(&chess_board_clone, depth - 1);
+                            chess_board_clone.promotion_mask = promotion_mask;
+
+                            // Remove new piece 
+                            chess_board_clone.pieces[new_piece as usize] &= !chess_board_clone.promotion_mask;
+                        }
+                    } else {
+                        count += count_moves(&chess_board_clone, depth - 1);
+                    }
                     moves &= moves - 1;
                 }  
                 current &= current - 1;
@@ -102,5 +119,16 @@ mod tests {
         let mut chess_board = ChessBoard::new("r2q1rk1/pP1p2pp/Q4n2/bbp1p3/Np6/1B3NBn/pPPP1PPP/R3K2R b KQ - 0 1 ");
         let count = count_moves(&mut chess_board, 1);
         assert_eq!(count, 6);
+    }
+
+    #[test]
+    fn test_pawn_promotion() {
+        // let mut chess_board = ChessBoard::new("r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1");
+        // let count = count_moves(&mut chess_board, 3);
+        // assert_eq!(count, 9467);
+
+        let mut chess_board = ChessBoard::new("r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1");
+        let count = count_moves(&mut chess_board, 4);
+        assert_eq!(count, 422333);
     }
 }

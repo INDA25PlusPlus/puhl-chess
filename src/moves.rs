@@ -54,7 +54,10 @@ pub fn move_pawn(chess_board: &mut ChessBoard, square: usize, piece_move: Board)
     if (piece_index == square_index(7, 7)) {
         chess_board.castling_availability[PieceColor::Black as usize] &= !CastlingAvailability::QueenSide;
     }
-    
+
+    if rank_index(piece_index) == 0 || rank_index(piece_index) == 7 {
+        chess_board.promotion_mask = piece_move;
+    }
     // TODO: promotion
 }
 
