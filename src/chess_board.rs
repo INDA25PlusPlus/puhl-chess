@@ -18,6 +18,7 @@ bitflags! {
 
 pub const CASTLING_AVAILABILITY_SIZE: usize = 4;
 
+#[derive(Clone)]
 pub struct ChessBoard {
     pub all_pieces: [Board; PIECE_COLOR_COUNT],
 

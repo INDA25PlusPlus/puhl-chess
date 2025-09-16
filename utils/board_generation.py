@@ -23,8 +23,8 @@ if __name__ == "__main__":
         "01100001",
     ]
     matrix = [
-        "00110100",
-        "00001000",
+        "00000000",
+        "00000000",
         "00000000",
         "00000000",
         "00000000",
@@ -39,6 +39,6 @@ if __name__ == "__main__":
     print(f"Hex   : 0x{number:016X}")
 
     print("\nFrom number to matrix")
-    restored = u64_to_matrix(4112)
+    restored = u64_to_matrix(2)
     for row in restored:
         print(row)

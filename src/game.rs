@@ -117,6 +117,28 @@ fn all_squares_which_block_check(chess_board: &ChessBoard, square_index: usize, 
     (BBMASKS.rays[king_index][dir as usize] & BBMASKS.rays[attack_index][Dir::opposite(dir) as usize]) | attacks_sliding
 }
 
+fn does_en_passant_cause_check(chess_board: &ChessBoard, square: usize, piece_color: PieceColor) -> bool {
+    // if chess_board.en_passant_mask == 0 { return false; }
+    assert_ne!(chess_board.en_passant_mask, 0);
+
+    let bb_square = single_square_board(rank_index(square) as isize, file_index(square) as isize);
+    let king = chess_board.pieces[PieceType::King as usize] & chess_board.all_pieces[piece_color as usize];
+    assert_ne!(king, 0);
+
+    let king_index = king.trailing_zeros() as usize;
+    let dir = Dir::FROM_SQUARES_PAIRS[king_index][square];
+    let dir = match dir {
+        Some(x) => x,
+        None => return false,
+    };
+    if dir != Dir::East && dir != Dir::West { return false; }
+    let reduced_pieces = (chess_board.all_pieces[PieceColor::White as usize] | chess_board.all_pieces[PieceColor::Black as usize]) & !(BBMASKS.pieces.en_passant_attack[PieceColor::opposite(piece_color) as usize][chess_board.en_passant_mask.trailing_zeros() as usize] | bb_square);
+    let attacked = get_piece_attacks(king_index, BBMASKS.rays[king_index][dir as usize], reduced_pieces);
+    if (attacked & (chess_board.pieces[PieceType::Rook as usize] | chess_board.pieces[PieceType::Queen as usize]) & chess_board.all_pieces[PieceColor::opposite(piece_color) as usize]) == 0 { return false; }
+
+    true
+}
+
 pub fn get_legal_moves_bishop(chess_board: &ChessBoard, square: usize, piece_color: PieceColor) -> Board {
     let pseudo_legal_moves = get_piece_moves(square, BBMASKS.pieces.attacks[piece_color as usize][PieceType::Bishop as usize][square], chess_board.all_pieces[PieceColor::White as usize] | chess_board.all_pieces[PieceColor::Black as usize]) & !chess_board.all_pieces[piece_color as usize];
     let check_blocking_moves = all_squares_which_block_check(&chess_board, square, piece_color);
@@ -141,12 +163,25 @@ pub fn get_legal_moves_knight(chess_board: &ChessBoard, square: usize, piece_col
 
 // TODO: Rename square index to just square and square to square_bit_board everywhere?
 pub fn get_legal_moves_pawn(chess_board: &ChessBoard, square: usize, piece_color: PieceColor) -> Board {
-    let mut pseudo_legal_moves = BBMASKS.pieces.attacks[piece_color as usize][PieceType::Pawn as usize][square] & (chess_board.all_pieces[PieceColor::opposite(piece_color) as usize] | chess_board.en_passant_mask);
+    let mut pseudo_legal_moves = BBMASKS.pieces.attacks[piece_color as usize][PieceType::Pawn as usize][square] & chess_board.all_pieces[PieceColor::opposite(piece_color) as usize];
+    // let mut en_passant_possible = true;
+    if (BBMASKS.pieces.attacks[piece_color as usize][PieceType::Pawn as usize][square] & chess_board.en_passant_mask) != 0 && !does_en_passant_cause_check(chess_board, square, piece_color) {
+        pseudo_legal_moves |= chess_board.en_passant_mask;
+        // en_passant_possible = false;
+    }
+
     if (BBMASKS.pieces.pawn_moves[piece_color as usize][square] & (chess_board.all_pieces[PieceColor::White as usize] | chess_board.all_pieces[PieceColor::Black as usize])) == 0 {
         pseudo_legal_moves |= BBMASKS.pieces.pawn_moves[piece_color as usize][square];
         pseudo_legal_moves |= BBMASKS.pieces.pawn_double_moves[piece_color as usize][square] & !(chess_board.all_pieces[PieceColor::White as usize] | chess_board.all_pieces[PieceColor::Black as usize]);
     }
-    let check_blocking_moves = all_squares_which_block_check(&chess_board, square, piece_color);
+    let mut check_blocking_moves = all_squares_which_block_check(&chess_board, square, piece_color);
+    // if en_passant_possible {
+    if chess_board.en_passant_mask != 0 {
+        if BBMASKS.pieces.en_passant_attack[PieceColor::opposite(piece_color) as usize][chess_board.en_passant_mask.trailing_zeros() as usize] & check_blocking_moves != 0 {
+            check_blocking_moves |= chess_board.en_passant_mask;
+        }
+    }
+    // }
     pseudo_legal_moves & check_blocking_moves
 }
 
@@ -194,6 +229,7 @@ pub fn get_legal_moves_king(chess_board: &ChessBoard, square: usize, piece_color
             allow_castle &= ((all_pieces & single_square_board(rank as isize, (file + offset) as isize)) == 0) &
             (attacks_to_square(&chess_board, index, PieceColor::opposite(piece_color), all_pieces) == 0);
         }
+        allow_castle &= (all_pieces & single_square_board(rank as isize, (file + 3) as isize)) == 0;
         if allow_castle { CastlingAvailability::QueenSide } else { CastlingAvailability::None }
     } else {
         CastlingAvailability::None
@@ -389,5 +425,10 @@ mod tests {
         let chess_board = ChessBoard::new("r3k2r/3p3p/p3B3/8/5b2/PQ5q/p7/R3K2R b KQkq - 0 1");
         let squares = get_legal_moves_king(&chess_board, square_index(7, 3), PieceColor::Black);
         assert_eq!(squares, 0x3408000000000000);
+
+        // https://lichess.org/editor/8/8/8/8/8/8/8/RN2K3_w_Q_-_0_1?color=white
+        let chess_board = ChessBoard::new("8/8/8/8/8/8/8/RN2K3 w Q - 0 1");
+        let squares = get_legal_moves_king(&chess_board, square_index(0, 3), PieceColor::White);
+        assert_eq!(squares, 0x0000000000001C14);
     }
 }
