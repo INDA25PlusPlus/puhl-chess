@@ -1,8 +1,10 @@
-pub type Board = u64;
+pub type BitBoard = u64;
 
 pub const BOARD_RANKS: usize = 8;
 pub const BOARD_FILES: usize = 8;
 pub const BOARD_SIZE: usize = BOARD_RANKS * BOARD_FILES;
+
+pub type BySquare<T = BitBoard> = [T; BOARD_SIZE];
 
 pub const fn square_index(rank: usize, file: usize) -> usize {
     rank * BOARD_FILES + file
@@ -17,12 +19,12 @@ pub const fn file_index(index: usize) -> usize {
 }
 
 // Generates a bit board where the square of 'rank' and 'file' is the only set square
-pub const fn single_square_board(rank: isize, file: isize) -> Board {
+pub const fn get_single_bit_board(rank: isize, file: isize) -> BitBoard {
     if rank < 0 || file < 0 || rank >= BOARD_RANKS as isize || file >= BOARD_FILES as isize {
         return 0;
     }
 
-    (1 as Board) << (rank as usize * BOARD_FILES + file as usize)
+    (1 as BitBoard) << (rank as usize * BOARD_FILES + file as usize)
 }
 
 #[cfg(test)]
@@ -51,14 +53,14 @@ mod tests {
         const RANK: usize = 3;
         const FILE: usize = 5;
         let index = square_index(RANK, FILE);
-        let board = single_square_board(RANK as isize, FILE as isize);
-        assert_eq!(board, (1 as Board) << index);
+        let board = get_single_bit_board(RANK as isize, FILE as isize);
+        assert_eq!(board, (1 as BitBoard) << index);
     }
 
     #[test]
     fn test_single_cell_board_out_of_bounds() {
-        assert_eq!(single_square_board(-1, -1), 0);
-        assert_eq!(single_square_board(BOARD_RANKS as isize, 0), 0);
-        assert_eq!(single_square_board(0, BOARD_FILES as isize), 0);
+        assert_eq!(get_single_bit_board(-1, -1), 0);
+        assert_eq!(get_single_bit_board(BOARD_RANKS as isize, 0), 0);
+        assert_eq!(get_single_bit_board(0, BOARD_FILES as isize), 0);
     }
 }
