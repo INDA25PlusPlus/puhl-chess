@@ -5,3 +5,4 @@ pub mod game;
 pub mod chess_board;
 pub mod piece;
 pub mod moves;
+pub mod facade;
