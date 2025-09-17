@@ -1,5 +1,6 @@
 use crate::board::*;
 
+#[repr(usize)]
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum Dir {
     North,
