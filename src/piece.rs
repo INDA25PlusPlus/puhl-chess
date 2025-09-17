@@ -28,3 +28,6 @@ impl PieceColor {
 }
 
 pub const PIECE_COLOR_COUNT: usize = 2;
+
+pub type ByPiece<T> = [T; PIECE_TYPE_COUNT];
+pub type ByColor<T> = [T; PIECE_COLOR_COUNT];
