@@ -199,6 +199,7 @@ mod pieces_masks {
         pub castling_moves: ByColor<[BySquare; CASTLING_AVAILABILITY_SIZE]>,
         // The squares between the rook and the king
         pub castling_in_between: ByColor<[BySquare; CASTLING_AVAILABILITY_SIZE]>,
+        pub castling_corners: ByColor<BySquare<CastlingAvailability>>,
     }
 
     // Generates the attack pattern for every piece on every square on an empty board
@@ -215,6 +216,7 @@ mod pieces_masks {
         let pawn_double_moves = generate_pawn_double_moves();
         let castling_moves = generate_castling_moves();
         let castling_in_between= generate_castling_in_between();
+        let castling_corners= generate_castling_corners();
         
         let mut i = 0;
         while i < BOARD_SIZE {
@@ -234,6 +236,7 @@ mod pieces_masks {
             en_passant_attacks: en_passant_attacks,
             castling_moves: castling_moves,
             castling_in_between: castling_in_between,
+            castling_corners: castling_corners,
         }
     }
 
@@ -319,6 +322,17 @@ mod pieces_masks {
         black[CastlingAvailability::KingSide.bits() | CastlingAvailability::QueenSide.bits()][BLACK_IDX] = 0x7600000000000000;
 
         [ white, black ]
+    }
+
+    const fn generate_castling_corners() -> ByColor<BySquare<CastlingAvailability>> {
+        let mut castling_corners = [[CastlingAvailability::None; BOARD_SIZE]; PIECE_COLOR_COUNT];
+
+        castling_corners[PieceColor::White as usize][square_index(0, 0)] = CastlingAvailability::KingSide;
+        castling_corners[PieceColor::White as usize][square_index(0, 7)] = CastlingAvailability::QueenSide;
+        castling_corners[PieceColor::Black as usize][square_index(7, 0)] = CastlingAvailability::KingSide;
+        castling_corners[PieceColor::Black as usize][square_index(7, 7)] = CastlingAvailability::QueenSide;
+
+        castling_corners
     }
 
     const fn generate_attacks_knight() -> [BitBoard; BOARD_SIZE] {
