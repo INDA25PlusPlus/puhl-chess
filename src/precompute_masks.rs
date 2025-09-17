@@ -3,77 +3,75 @@ use crate::dir::*;
 use crate::piece::*;
 use crate::chess_board::*;
 
-// TODO: Make a more consistent naming scheme
-// TODO: Make easy way to visualize hard coded hex bit boards without taking to much space
-// TODO: Don't make this a global constant
-pub const BBMASKS: BBMasks = make_lookup();
+pub const BBMASKS: BBMasks = BBMasks::new(); 
 
-/// Contains the some precomputed bit board patterns
+// Contains some precomputed bit board patterns
 pub struct BBMasks {
     pub rays: rays_masks::Rays,
     pub lines: lines_masks::Lines,
     pub pieces: pieces_masks::Pieces,
 }
 
-const fn make_lookup() -> BBMasks {
-    let rays = rays_masks::generate();
-    let lines = lines_masks::generate(&rays);
-    let pieces = pieces_masks::generate(&lines);
-    BBMasks { rays, lines, pieces }
+impl BBMasks {
+    const fn new() -> Self {
+        let rays = rays_masks::generate();
+        let lines = lines_masks::generate(&rays);
+        let pieces = pieces_masks::generate(&lines);
+        BBMasks { rays, lines, pieces }
+    }
 }
+
+const FILE_H: BitBoard = 0x0101010101010100;
+const DIAG_A8_H1: BitBoard = 0x0102040810204000;
+const RANK_1: BitBoard = 0x000000000000007F;
+const DIAG_H8_A1: BitBoard = 0x0040201008040201;
+const FILE_A: BitBoard = 0x0080808080808080;
+const DIAG_A1_H8: BitBoard = 0x0002040810204080;
+const RANK_8: BitBoard = 0xFE00000000000000;
+const DIAG_H1_A8: BitBoard = 0x8040201008040200;
 
 mod rays_masks {
     use super::*;
 
-    // TODO: Maybe switch inner and outer array to make it more consistent with 'lines' and 'pieces'
-    pub type Rays = [[Board; DIR_COUNT]; BOARD_SIZE];
+    pub type Rays = BySquare<[BitBoard; DIR_COUNT]>;
 
     // Generates one ray for every cardinal direction (Dir) for every square on the board
-    // TODO: Maybe switch the hardcoded hex bit boards to constants (ex. 0x0101010101010100 -> H1_H8_FILE)
     pub const fn generate() -> Rays {
-        const fn generate_north(i: usize) -> Board {
-            const NORTH: Board = 0x0101010101010100;    // h1 -> h8 file
-            NORTH << i
+        const fn generate_north(i: usize) -> BitBoard {
+            FILE_H << i
         }
 
-        const fn generate_north_east(rank: usize, file: usize) -> Board {
-            const NORTH_EAST: Board = 0x0102040810204000;   // a8 -> h1 diagonal 
+        const fn generate_north_east(rank: usize, file: usize) -> BitBoard {
             let right_shift: usize = BOARD_FILES - file - 1;
-            (((NORTH_EAST << (right_shift * BOARD_FILES)) >> (right_shift * BOARD_FILES))
+            (((DIAG_A8_H1 << (right_shift * BOARD_FILES)) >> (right_shift * BOARD_FILES))
                 << (rank * BOARD_FILES)) >> right_shift
         }
 
-        const fn generate_east(rank: usize, file: usize) -> Board {
-            const EAST: Board = 0x000000000000007F; // a1 -> a8 rank
-            (EAST >> (BOARD_FILES - file - 1)) << (rank * BOARD_RANKS)
+        const fn generate_east(rank: usize, file: usize) -> BitBoard {
+            (RANK_1 >> (BOARD_FILES - file - 1)) << (rank * BOARD_RANKS)
         }
 
-        const fn generate_south_east(rank: usize, file: usize) -> Board {
-            const SOUTH_EAST: Board = 0x0040201008040201;   // h8 -> a1 anti-diagonal
+        const fn generate_south_east(rank: usize, file: usize) -> BitBoard {
             let right_shift: usize = BOARD_FILES - file - 1;
-            (((SOUTH_EAST >> (right_shift * BOARD_FILES)) << (right_shift * BOARD_FILES))
+            (((DIAG_H8_A1 >> (right_shift * BOARD_FILES)) << (right_shift * BOARD_FILES))
                 >> ((BOARD_RANKS - rank - 1) * BOARD_FILES)) >> right_shift
         }
 
-        const fn generate_south(i: usize) -> Board {
-            const SOUTH: Board = 0x0080808080808080;    // h8 -> a8 file
-            SOUTH >> (BOARD_SIZE - i - 1)
+        const fn generate_south(i: usize) -> BitBoard {
+            FILE_A >> (BOARD_SIZE - i - 1)
         }
 
-        const fn generate_south_west(rank: usize, file: usize) -> Board {
-            const SOUTH_WEST: Board = 0x0002040810204080;   // a1 -> h8 diagonal
-            (((SOUTH_WEST >> (file * BOARD_FILES)) << (file * BOARD_FILES))
+        const fn generate_south_west(rank: usize, file: usize) -> BitBoard {
+            (((DIAG_A1_H8 >> (file * BOARD_FILES)) << (file * BOARD_FILES))
                 >> ((BOARD_RANKS - rank - 1) * BOARD_FILES)) << file
         }
 
-        const fn generate_west(rank: usize, file: usize) -> Board {
-            const WEST: Board = 0xFE00000000000000; // h1 -> h8 rank
-            (WEST << file) >> ((BOARD_FILES - rank - 1) * BOARD_FILES)
+        const fn generate_west(rank: usize, file: usize) -> BitBoard {
+            (RANK_8 << file) >> ((BOARD_FILES - rank - 1) * BOARD_FILES)
         }
 
-        const fn generate_north_west(rank: usize, file: usize) -> Board {
-            const NORTH_WEST: Board = 0x8040201008040200; // a1 -> h8 anti-diagonal
-            (((NORTH_WEST << (file * BOARD_FILES)) >> (file * BOARD_FILES))
+        const fn generate_north_west(rank: usize, file: usize) -> BitBoard {
+            (((DIAG_H1_A8 << (file * BOARD_FILES)) >> (file * BOARD_FILES))
                 << (rank * BOARD_FILES)) << file
         }
 
@@ -133,13 +131,13 @@ mod lines_masks {
     use super::*;
 
     pub struct Lines {
-        pub ranks: [Board; BOARD_SIZE],
-        pub files: [Board; BOARD_SIZE],
-        pub diagonals: [Board; BOARD_SIZE],
-        pub anti_diagonals: [Board; BOARD_SIZE],
+        pub ranks: [BitBoard; BOARD_SIZE],
+        pub files: [BitBoard; BOARD_SIZE],
+        pub diagonals: [BitBoard; BOARD_SIZE],
+        pub anti_diagonals: [BitBoard; BOARD_SIZE],
     }
 
-    // Generates horizontal, vertical and diagonal lines for each square on the board
+    // Generates horizontal, vertical and diagonal lines for every square on the board
     pub const fn generate(rays: &rays_masks::Rays) -> Lines {
         let mut ranks = [0; BOARD_SIZE];
         let mut files = [0; BOARD_SIZE];
@@ -191,15 +189,19 @@ mod pieces_masks {
     use super::*;
 
     pub struct Pieces {
-        pub attacks: [[[Board; BOARD_SIZE]; PIECE_TYPE_COUNT]; PIECE_COLOR_COUNT],
-        pub pawn_moves: [[Board; BOARD_SIZE]; PIECE_COLOR_COUNT],
-        pub pawn_double_moves: [[Board; BOARD_SIZE]; PIECE_COLOR_COUNT],
-        pub en_passant_attack: [[Board; BOARD_SIZE]; PIECE_COLOR_COUNT],
-        // TODO: Also add the castling option from the rooks side
-        pub castling_moves: [[[Board; BOARD_SIZE]; CASTLING_AVAILABILITY_SIZE]; PIECE_COLOR_COUNT],
+        // Contains the squares which a piece could go to to capture another piece
+        // The squares which a piece can attack and the square a piece can move to is the same for all pieces except pawns;
+        //      this is why there is a separate attribute for pawn moves
+        pub attacks: ByColor<ByPiece<BySquare>>,
+        pub pawn_moves: ByColor<BySquare>,
+        pub pawn_double_moves: ByColor<BySquare>,
+        pub en_passant_attacks: ByColor<BySquare>,
+        pub castling_moves: ByColor<[BySquare; CASTLING_AVAILABILITY_SIZE]>,
+        // The squares between the rook and the king
+        pub castling_in_between: ByColor<[BySquare; CASTLING_AVAILABILITY_SIZE]>,
     }
 
-    // Generates the attack patter for every piece on every square on an empty board
+    // Generates the attack pattern for every piece on every square on an empty board
     pub const fn generate(lines: &lines_masks::Lines) -> Pieces {
         let (white_pawn, black_pawn) = generate_attacks_pawn();
         let knight = generate_attacks_knight();
@@ -208,10 +210,11 @@ mod pieces_masks {
         let mut queen = [0; BOARD_SIZE];
         let king = generate_attacks_king();
 
-        let (white_pawn_moves, black_pawn_moves) = generate_moves_pawn();
-        let (white_pawn_double_moves, black_pawn_double_moves) = generate_double_moves_pawn();
-        let (white_en_passant, black_en_passant) = generate_en_passant();
+        let en_passant_attacks = generate_en_passant();
+        let pawn_moves  = generate_pawn_moves();
+        let pawn_double_moves = generate_pawn_double_moves();
         let castling_moves = generate_castling_moves();
+        let castling_in_between= generate_castling_in_between();
         
         let mut i = 0;
         while i < BOARD_SIZE {
@@ -226,106 +229,114 @@ mod pieces_masks {
                 [ white_pawn, knight, bishop, rook, queen, king, ],
                 [ black_pawn, knight, bishop, rook, queen, king, ],
             ],
-            pawn_moves: [
-                white_pawn_moves,
-                black_pawn_moves,
-            ], 
-            pawn_double_moves: [
-                white_pawn_double_moves,
-                black_pawn_double_moves,
-            ],
+            pawn_moves: pawn_moves, 
+            pawn_double_moves: pawn_double_moves,
+            en_passant_attacks: en_passant_attacks,
             castling_moves: castling_moves,
-            en_passant_attack: [
-                white_en_passant,
-                black_en_passant,
-            ]
+            castling_in_between: castling_in_between,
         }
     }
 
-    const fn generate_en_passant() -> ([Board; BOARD_SIZE], [Board; BOARD_SIZE]) {
-        let mut white: [Board; BOARD_SIZE] = [0; BOARD_SIZE];
-        let mut black: [Board; BOARD_SIZE] = [0; BOARD_SIZE];
+    const fn generate_en_passant() -> ByColor<BySquare> {
+        let mut white: [BitBoard; BOARD_SIZE] = [0; BOARD_SIZE];
+        let mut black: [BitBoard; BOARD_SIZE] = [0; BOARD_SIZE];
 
         let white_rank = 2;
         let black_rank = 5;
         
         let mut file = 0;
         while file < BOARD_FILES {
-            white[square_index(white_rank, file) as usize] = single_square_board((white_rank + 1) as isize, file as isize);
-            black[square_index(black_rank, file) as usize] = single_square_board((black_rank - 1) as isize, file as isize);
+            white[square_index(white_rank, file) as usize] = get_single_bit_board((white_rank + 1) as isize, file as isize);
+            black[square_index(black_rank, file) as usize] = get_single_bit_board((black_rank - 1) as isize, file as isize);
             file += 1;
         }
 
-        (white, black)
+        [ white, black ]
     }
 
-    // TODO: Make this return the correct type used in the Pieces struct instead of tuple
-    const fn generate_moves_pawn() -> ([Board; BOARD_SIZE], [Board; BOARD_SIZE]) {
-        let mut white: [Board; BOARD_SIZE] = [0; BOARD_SIZE];
-        let mut black: [Board; BOARD_SIZE] = [0; BOARD_SIZE];
+    const fn generate_pawn_moves() -> ByColor<BySquare> {
+        let mut white: [BitBoard; BOARD_SIZE] = [0; BOARD_SIZE];
+        let mut black: [BitBoard; BOARD_SIZE] = [0; BOARD_SIZE];
 
         let mut index: usize = 0;
         while index < BOARD_SIZE {
             let rank = rank_index(index) as isize;
             let file = file_index(index) as isize;
-            white[index] = single_square_board(rank + 1, file);
-            black[index] = single_square_board(rank - 1, file);
+            white[index] = get_single_bit_board(rank + 1, file);
+            black[index] = get_single_bit_board(rank - 1, file);
             index += 1;
         }
 
-        return (white, black)
+        return [ white, black ]
     }
 
-    const fn generate_double_moves_pawn() -> ([Board; BOARD_SIZE], [Board; BOARD_SIZE]) {
-        let mut white: [Board; BOARD_SIZE] = [0; BOARD_SIZE];
-        let mut black: [Board; BOARD_SIZE] = [0; BOARD_SIZE];
+    const fn generate_pawn_double_moves() -> ByColor<BySquare> {
+        let mut white: [BitBoard; BOARD_SIZE] = [0; BOARD_SIZE];
+        let mut black: [BitBoard; BOARD_SIZE] = [0; BOARD_SIZE];
 
         let white_rank = 1;
         let black_rank = 6;
         
         let mut file = 0;
         while file < BOARD_FILES {
-            white[square_index(white_rank, file) as usize] = single_square_board((white_rank + 2) as isize, file as isize);
-            black[square_index(black_rank, file) as usize] = single_square_board((black_rank - 2) as isize, file as isize);
+            white[square_index(white_rank, file) as usize] = get_single_bit_board((white_rank + 2) as isize, file as isize);
+            black[square_index(black_rank, file) as usize] = get_single_bit_board((black_rank - 2) as isize, file as isize);
             file += 1;
         }
-
-        (white, black)
-    }
-
-    const fn generate_castling_moves() -> [[[Board; BOARD_SIZE]; CASTLING_AVAILABILITY_SIZE]; PIECE_COLOR_COUNT] {
-        let mut white = [[0 as Board; BOARD_SIZE]; CASTLING_AVAILABILITY_SIZE];
-        let mut black = [[0 as Board; BOARD_SIZE]; CASTLING_AVAILABILITY_SIZE];
-
-        const WHITE_IDX: usize = square_index(0, 3);
-        white[CastlingAvailability::KingSide.bits()][WHITE_IDX] = single_square_board(0, 1);
-        white[CastlingAvailability::QueenSide.bits()][WHITE_IDX] = single_square_board(0, 5);
-        white[CastlingAvailability::KingSide.bits() | CastlingAvailability::QueenSide.bits()][WHITE_IDX] = single_square_board(0, 1) | single_square_board(0, 5);
-
-        const BLACK_IDX: usize = square_index(7, 3);
-        black[CastlingAvailability::KingSide.bits()][BLACK_IDX] = single_square_board(7, 1);
-        black[CastlingAvailability::QueenSide.bits()][BLACK_IDX] = single_square_board(7, 5);
-        black[CastlingAvailability::KingSide.bits() | CastlingAvailability::QueenSide.bits()][BLACK_IDX] = single_square_board(7, 1) | single_square_board(7, 5);
 
         [ white, black ]
     }
 
-    const fn generate_attacks_knight() -> [Board; BOARD_SIZE] {
-        let mut result: [Board; BOARD_SIZE] = [0; BOARD_SIZE];
+    const fn generate_castling_moves() -> ByColor<[BySquare; CASTLING_AVAILABILITY_SIZE]> {
+        let mut white = [[0 as BitBoard; BOARD_SIZE]; CASTLING_AVAILABILITY_SIZE];
+        let mut black = [[0 as BitBoard; BOARD_SIZE]; CASTLING_AVAILABILITY_SIZE];
+
+        const WHITE_IDX: usize = square_index(0, 3);
+        white[CastlingAvailability::KingSide.bits()][WHITE_IDX] = get_single_bit_board(0, 1);
+        white[CastlingAvailability::QueenSide.bits()][WHITE_IDX] = get_single_bit_board(0, 5);
+        white[CastlingAvailability::KingSide.bits() | CastlingAvailability::QueenSide.bits()][WHITE_IDX] = get_single_bit_board(0, 1) | get_single_bit_board(0, 5);
+
+        const BLACK_IDX: usize = square_index(7, 3);
+        black[CastlingAvailability::KingSide.bits()][BLACK_IDX] = get_single_bit_board(7, 1);
+        black[CastlingAvailability::QueenSide.bits()][BLACK_IDX] = get_single_bit_board(7, 5);
+        black[CastlingAvailability::KingSide.bits() | CastlingAvailability::QueenSide.bits()][BLACK_IDX] = get_single_bit_board(7, 1) | get_single_bit_board(7, 5);
+
+        [ white, black ]
+    }
+
+    const fn generate_castling_in_between() -> ByColor<[BySquare; CASTLING_AVAILABILITY_SIZE]> {
+        let mut white = [[0 as BitBoard; BOARD_SIZE]; CASTLING_AVAILABILITY_SIZE];
+        let mut black = [[0 as BitBoard; BOARD_SIZE]; CASTLING_AVAILABILITY_SIZE];
+
+        const WHITE_IDX: usize = square_index(0, 3);
+        white[CastlingAvailability::KingSide.bits()][WHITE_IDX] = 0x0000000000000006;
+        white[CastlingAvailability::QueenSide.bits()][WHITE_IDX] = 0x0000000000000070;
+        white[CastlingAvailability::KingSide.bits() | CastlingAvailability::QueenSide.bits()][WHITE_IDX] = 0x0000000000000076;
+
+        const BLACK_IDX: usize = square_index(7, 3);
+        black[CastlingAvailability::KingSide.bits()][BLACK_IDX] = 0x0600000000000000;
+        black[CastlingAvailability::QueenSide.bits()][BLACK_IDX] = 0x7000000000000000;
+        black[CastlingAvailability::KingSide.bits() | CastlingAvailability::QueenSide.bits()][BLACK_IDX] = 0x7600000000000000;
+
+        [ white, black ]
+    }
+
+    const fn generate_attacks_knight() -> [BitBoard; BOARD_SIZE] {
+        let mut result: [BitBoard; BOARD_SIZE] = [0; BOARD_SIZE];
 
         let mut row: isize = 0;
         while row < BOARD_RANKS as isize {
             let mut col: isize = 0;
             while col < BOARD_FILES as isize {
                 result[square_index(row as usize, col as usize)] =
-                    single_square_board(row + 1, col + 2) | 
-                    single_square_board(row + 1, col - 2) | 
-                    single_square_board(row - 1, col + 2) |
-                    single_square_board(row - 1, col - 2) |
-                    single_square_board(row + 2, col + 1) |
-                    single_square_board(row + 2, col - 1) |
-                    single_square_board(row - 2, col + 1) |
-                    single_square_board(row - 2, col - 1);
+                    get_single_bit_board(row + 1, col + 2) | 
+                    get_single_bit_board(row + 1, col - 2) | 
+                    get_single_bit_board(row - 1, col + 2) |
+                    get_single_bit_board(row - 1, col - 2) |
+                    get_single_bit_board(row + 2, col + 1) |
+                    get_single_bit_board(row + 2, col - 1) |
+                    get_single_bit_board(row - 2, col + 1) |
+                    get_single_bit_board(row - 2, col - 1);
                 col += 1;
             }
             row += 1;
@@ -334,22 +345,22 @@ mod pieces_masks {
         result
     }
 
-    const fn generate_attacks_king() -> [Board; BOARD_SIZE] {
-        let mut result: [Board; BOARD_SIZE] = [0; BOARD_SIZE];
+    const fn generate_attacks_king() -> [BitBoard; BOARD_SIZE] {
+        let mut result: [BitBoard; BOARD_SIZE] = [0; BOARD_SIZE];
 
         let mut row: isize = 0;
         while row < BOARD_RANKS as isize {
             let mut col: isize = 0;
             while col < BOARD_FILES as isize {
                 result[square_index(row as usize, col as usize)] =
-                    single_square_board(row, col + 1)     | 
-                    single_square_board(row, col - 1)     | 
-                    single_square_board(row - 1, col + 1) |
-                    single_square_board(row - 1, col)     |
-                    single_square_board(row - 1, col - 1) |
-                    single_square_board(row + 1, col + 1) |
-                    single_square_board(row + 1, col)     |
-                    single_square_board(row + 1, col - 1);
+                    get_single_bit_board(row, col + 1)     | 
+                    get_single_bit_board(row, col - 1)     | 
+                    get_single_bit_board(row - 1, col + 1) |
+                    get_single_bit_board(row - 1, col)     |
+                    get_single_bit_board(row - 1, col - 1) |
+                    get_single_bit_board(row + 1, col + 1) |
+                    get_single_bit_board(row + 1, col)     |
+                    get_single_bit_board(row + 1, col - 1);
                 col += 1;
             }
             row += 1;
@@ -358,16 +369,16 @@ mod pieces_masks {
         result
     }
 
-    const fn generate_attacks_pawn() -> ([Board; BOARD_SIZE], [Board; BOARD_SIZE]) {
-        let mut white: [Board; BOARD_SIZE] = [0; BOARD_SIZE];
-        let mut black: [Board; BOARD_SIZE] = [0; BOARD_SIZE];
+    const fn generate_attacks_pawn() -> ([BitBoard; BOARD_SIZE], [BitBoard; BOARD_SIZE]) {
+        let mut white: [BitBoard; BOARD_SIZE] = [0; BOARD_SIZE];
+        let mut black: [BitBoard; BOARD_SIZE] = [0; BOARD_SIZE];
 
         let mut index: usize = 0;
         while index < BOARD_SIZE {
             let rank = rank_index(index) as isize;
             let file = file_index(index) as isize;
-            white[index] = single_square_board(rank + 1, file + 1) | single_square_board(rank + 1, file - 1);
-            black[index] = single_square_board(rank - 1, file + 1) | single_square_board(rank - 1, file - 1);
+            white[index] = get_single_bit_board(rank + 1, file + 1) | get_single_bit_board(rank + 1, file - 1);
+            black[index] = get_single_bit_board(rank - 1, file + 1) | get_single_bit_board(rank - 1, file - 1);
             index += 1;
         }
 
@@ -402,31 +413,33 @@ mod pieces_masks {
 
         #[test]
         fn test_pawn_moves_generation() {
-            const MOVES: &[[Board; BOARD_SIZE]; PIECE_COLOR_COUNT] = &PIECES.pawn_moves;
+            const MOVES: &[[BitBoard; BOARD_SIZE]; PIECE_COLOR_COUNT] = &PIECES.pawn_moves;
             assert_eq!(MOVES[PieceColor::White as usize][square_index(3, 4)], 0x0000001000000000);
             assert_eq!(MOVES[PieceColor::Black as usize][square_index(3, 4)], 0x0000000000100000);
             assert_eq!(MOVES[PieceColor::White as usize][square_index(7, 3)], 0);
-            assert_eq!(MOVES[PieceColor::Black as usize][square_index(7, 3)], single_square_board(6, 3));
+            assert_eq!(MOVES[PieceColor::Black as usize][square_index(7, 3)], get_single_bit_board(6, 3));
             assert_eq!(MOVES[PieceColor::Black as usize][square_index(0, 4)], 0);
         }
 
+        #[test]
         fn test_pawn_double_moves_generation() {
-            const MOVES: &[[Board; BOARD_SIZE]; PIECE_COLOR_COUNT] = &PIECES.pawn_double_moves;
+            const MOVES: &[[BitBoard; BOARD_SIZE]; PIECE_COLOR_COUNT] = &PIECES.pawn_double_moves;
             assert_eq!(MOVES[PieceColor::White as usize][square_index(3, 4)], 0);
             assert_eq!(MOVES[PieceColor::Black as usize][square_index(3, 4)], 0);
-            assert_eq!(MOVES[PieceColor::White as usize][square_index(1, 3)], single_square_board(3, 3));
+            assert_eq!(MOVES[PieceColor::White as usize][square_index(1, 3)], get_single_bit_board(3, 3));
             assert_eq!(MOVES[PieceColor::Black as usize][square_index(7, 3)], 0);
-            assert_eq!(MOVES[PieceColor::Black as usize][square_index(6, 4)], single_square_board(4, 4));
+            assert_eq!(MOVES[PieceColor::Black as usize][square_index(6, 4)], get_single_bit_board(4, 4));
         }
 
+        #[test]
         fn test_castle_moves_generation() {
-            let MOVES = &PIECES.castling_moves;
+            const MOVES: &[[[u64; BOARD_SIZE]; CASTLING_AVAILABILITY_SIZE]; PIECE_COLOR_COUNT] = &PIECES.castling_moves;
             assert_eq!(MOVES[PieceColor::White as usize][CastlingAvailability::KingSide.bits()][square_index(3, 4)], 0);
             assert_eq!(MOVES[PieceColor::White as usize][CastlingAvailability::KingSide.bits()][square_index(0, 3)], 0x2);
             assert_eq!(MOVES[PieceColor::White as usize][CastlingAvailability::KingSide.bits()][square_index(1, 3)], 0);
             assert_eq!(MOVES[PieceColor::White as usize][CastlingAvailability::QueenSide.bits()][square_index(0, 2)], 0);
-            assert_eq!(MOVES[PieceColor::Black as usize][CastlingAvailability::KingSide.bits() | CastlingAvailability::QueenSide.bits()][square_index(0, 2)], 0x2200000000000000);
-            assert_eq!(MOVES[PieceColor::Black as usize][CastlingAvailability::QueenSide.bits()][square_index(0, 2)], 0x2000000000000000);
+            assert_eq!(MOVES[PieceColor::Black as usize][CastlingAvailability::KingSide.bits() | CastlingAvailability::QueenSide.bits()][square_index(7, 3)], 0x2200000000000000);
+            assert_eq!(MOVES[PieceColor::Black as usize][CastlingAvailability::QueenSide.bits()][square_index(7, 3)], 0x2000000000000000);
         }
     }
 }
