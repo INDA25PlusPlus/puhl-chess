@@ -1,35 +1,18 @@
 use crate::board::*;
 use crate::piece::*;
-use bitflags::bitflags;
-
-// TODO: Put castling into its own file
-bitflags! {
-    #[derive(PartialEq, Clone, Copy)]
-    pub struct CastlingAvailability: usize {
-        const None      = 0;
-        const KingSide  = 1;
-        const QueenSide = 2;
-        // const WhiteKingSide  = 1;
-        // const WhiteQueenSide = 2;
-        // const BlackKingSide  = 4;
-        // const BlackQueenSide = 8;
-    }
-}
-
-pub const CASTLING_AVAILABILITY_SIZE: usize = 4;
 
 #[derive(Clone)]
 pub struct ChessBoard {
-    pub all_pieces: [Board; PIECE_COLOR_COUNT],
+    pub all_pieces: ByColor<BitBoard>,
 
-    pub white_turn: bool,
-    pub castling_availability: [CastlingAvailability; PIECE_COLOR_COUNT],
-    pub en_passant_mask: Board,     // Contains the square a pawn has just passed while moving two squares
-    pub promotion_mask: Board,
+    pub current_color: PieceColor,
+    pub castling_availability: ByColor<CastlingAvailability>,
+    pub en_passant_mask: BitBoard,     // Contains the square a pawn has just passed while moving two squares
+    pub promotion_mask: BitBoard,
     pub half_moves: u32,            // Half moves since last pawn move or capture. Used for fify-move rule
     pub full_moves: u32,            // Full moves since start
 
-    pub pieces: [Board; PIECE_TYPE_COUNT],
+    pub pieces: ByPiece<BitBoard>,
 }
 
 impl ChessBoard {
@@ -38,7 +21,7 @@ impl ChessBoard {
     pub fn new(fen: &str) -> ChessBoard {
         let mut chess_board: ChessBoard = ChessBoard { 
             all_pieces: [0, 0],
-            white_turn: true, 
+            current_color: PieceColor::White, 
             castling_availability: [CastlingAvailability::None; PIECE_COLOR_COUNT],
             en_passant_mask: 0, 
             promotion_mask: 0,
@@ -58,7 +41,7 @@ impl ChessBoard {
                     square_index -= 1;
                     assert!(square_index < BOARD_SIZE);
                     // TODO: also update all_white / all_black
-                    let square = single_square_board(rank_index(square_index) as isize, (file_index(square_index)) as isize);
+                    let square = get_single_bit_board(rank_index(square_index) as isize, (file_index(square_index)) as isize);
 
                     let piece_type = match chr {
                             'P' | 'p' => &mut chess_board.pieces[PieceType::Pawn as usize],
@@ -81,7 +64,7 @@ impl ChessBoard {
         }
 
         fn handle_turn_encoding(turn: &str, chess_board: &mut ChessBoard) {
-            if turn == "w" { chess_board.white_turn = true } else { chess_board.white_turn = false }
+            if turn == "w" { chess_board.current_color = PieceColor::White } else { chess_board.current_color = PieceColor::Black }
         }
 
         fn handle_castling_availability_encoding(availabilities: &str, chess_board: &mut ChessBoard) {
@@ -110,7 +93,7 @@ impl ChessBoard {
             let file = (file - b'a') as usize;
             let rank = (rank - b'1') as usize;
 
-            chess_board.en_passant_mask = single_square_board(rank as isize, (BOARD_FILES - file - 1) as isize);
+            chess_board.en_passant_mask = get_single_bit_board(rank as isize, (BOARD_FILES - file - 1) as isize);
         }
 
         for (i, field) in fen.split_whitespace().enumerate() {
@@ -125,6 +108,10 @@ impl ChessBoard {
             }
         }
         chess_board
+    }
+
+    pub const fn all_pieces(&self) -> BitBoard {
+        self.all_pieces[PieceColor::White as usize] | self.all_pieces[PieceColor::Black as usize]
     }
 }
 
@@ -144,7 +131,7 @@ mod tests {
         assert_eq!(chess_board.pieces[PieceType::King as usize], 0x0800000000000008);
         assert_eq!(chess_board.all_pieces[PieceColor::White as usize], 0x000000000000ffff);
         assert_eq!(chess_board.all_pieces[PieceColor::Black as usize], 0xffff000000000000);
-        assert_eq!(chess_board.white_turn, true);
+        assert_eq!(chess_board.current_color, PieceColor::White);
         assert_eq!(chess_board.en_passant_mask, 0);
         assert_eq!(chess_board.half_moves, 0);
         assert_eq!(chess_board.full_moves, 1);
@@ -158,7 +145,7 @@ mod tests {
         assert_eq!(chess_board.pieces[PieceType::King as usize], 0x0800000000000008);
         assert_eq!(chess_board.all_pieces[PieceColor::White as usize], 0x000000000800F7FF);
         assert_eq!(chess_board.all_pieces[PieceColor::Black as usize], 0xffff000000000000);
-        assert_eq!(chess_board.white_turn, false);
+        assert_eq!(chess_board.current_color, PieceColor::Black);
         assert_eq!(chess_board.en_passant_mask, 0x0000000000080000);
         assert_eq!(chess_board.half_moves, 0);
         assert_eq!(chess_board.full_moves, 1);
@@ -173,7 +160,7 @@ mod tests {
         assert_eq!(chess_board.pieces[PieceType::King as usize], 0x0010000200000000);
         assert_eq!(chess_board.all_pieces[PieceColor::White as usize], 0x0000040213846018);
         assert_eq!(chess_board.all_pieces[PieceColor::Black as usize], 0x0011223480200000);
-        assert_eq!(chess_board.white_turn, true);
+        assert_eq!(chess_board.current_color, PieceColor::White);
         assert_eq!(chess_board.en_passant_mask, 0);
         assert_eq!(chess_board.half_moves, 0);
         assert_eq!(chess_board.full_moves, 1);

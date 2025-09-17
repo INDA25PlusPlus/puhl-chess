@@ -1,3 +1,4 @@
+use bitflags::bitflags;
 pub type BitBoard = u64;
 
 pub const BOARD_RANKS: usize = 8;
@@ -5,6 +6,17 @@ pub const BOARD_FILES: usize = 8;
 pub const BOARD_SIZE: usize = BOARD_RANKS * BOARD_FILES;
 
 pub type BySquare<T = BitBoard> = [T; BOARD_SIZE];
+
+bitflags! {
+    #[derive(PartialEq, Clone, Copy)]
+    pub struct CastlingAvailability: usize {
+        const None      = 0;
+        const KingSide  = 1;
+        const QueenSide = 2;
+    }
+}
+
+pub const CASTLING_AVAILABILITY_SIZE: usize = 4;
 
 pub const fn square_index(rank: usize, file: usize) -> usize {
     rank * BOARD_FILES + file
