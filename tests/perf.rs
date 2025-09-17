@@ -12,18 +12,17 @@ mod tests {
             return 1;
         }
         let mut count = 0;
-        let piece_color = if chess_board.white_turn { PieceColor::White } else { PieceColor::Black };
         for piece_type in [ PieceType::Pawn, PieceType::Knight, PieceType::Bishop, PieceType::Rook, PieceType::Queen, PieceType::King ] {
-            let mut current = chess_board.pieces[piece_type as usize] & chess_board.all_pieces[piece_color as usize];
+            let mut current = chess_board.pieces[piece_type as usize] & chess_board.all_pieces[chess_board.current_color as usize];
             while current != 0 {
                 let index = current.trailing_zeros() as usize;
                 let mut moves = match piece_type {
-                    PieceType::Pawn => get_legal_moves_pawn(chess_board, index, piece_color),
-                    PieceType::Knight => get_legal_moves_knight(chess_board, index, piece_color),
-                    PieceType::Bishop => get_legal_moves_bishop(chess_board, index, piece_color),
-                    PieceType::Rook => get_legal_moves_rook(chess_board, index, piece_color),
-                    PieceType::Queen => get_legal_moves_queen(chess_board, index, piece_color),
-                    PieceType::King => get_legal_moves_king(chess_board, index, piece_color),
+                    PieceType::Pawn => get_legal_moves_pawn(chess_board, index),
+                    PieceType::Knight => get_legal_moves_knight(chess_board, index),
+                    PieceType::Bishop => get_legal_moves_bishop(chess_board, index),
+                    PieceType::Rook => get_legal_moves_rook(chess_board, index),
+                    PieceType::Queen => get_legal_moves_queen(chess_board, index),
+                    PieceType::King => get_legal_moves_king(chess_board, index),
                 };
                 // count += moves.count_ones();
                 while moves != 0 {
@@ -38,7 +37,7 @@ mod tests {
                         PieceType::Queen => move_queen(&mut chess_board_clone, index, current_move),
                         PieceType::King => move_king(&mut chess_board_clone, index, current_move),
                     }
-                    chess_board_clone.white_turn = !chess_board_clone.white_turn;
+                    chess_board_clone.current_color = PieceColor::opposite(chess_board_clone.current_color);
                     if chess_board_clone.promotion_mask != 0 {
                         // Remove pawn
                         chess_board_clone.pieces[PieceType::Pawn as usize] &= !chess_board_clone.promotion_mask;
