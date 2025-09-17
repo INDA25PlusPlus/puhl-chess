@@ -1,6 +1,6 @@
 // https://www.chessprogramming.org/Perft_Results
 use chess_game::chess_board::ChessBoard;
-use chess_game::game::*;
+use chess_game::move_generation::*;
 use chess_game::moves::*;
 
 mod tests {
