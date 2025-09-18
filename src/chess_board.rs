@@ -1,5 +1,4 @@
 use crate::board::*;
-use crate::chess_board;
 use crate::piece::*;
 use crate::precompute_masks::*;
 

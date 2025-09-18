@@ -223,6 +223,7 @@ fn does_en_passant_cause_check(chess_board: &ChessBoard, square: usize) -> bool 
 }
 
 mod tests {
+    #[allow(unused_imports)]
     use super::*;
 
     #[test]

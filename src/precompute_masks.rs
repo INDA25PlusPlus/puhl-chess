@@ -1,7 +1,6 @@
 use crate::board::*;
 use crate::dir::*;
 use crate::piece::*;
-use crate::chess_board::*;
 
 pub const BBMASKS: BBMasks = BBMasks::new(); 
 
@@ -326,7 +325,7 @@ mod pieces_masks {
 
         [ white, black ]
     }
-    
+
     const fn generate_castling_corners() -> ByColor<BySquare<CastlingAvailability>> {
         let mut castling_corners = [[CastlingAvailability::None; BOARD_SIZE]; PIECE_COLOR_COUNT];
 

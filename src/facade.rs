@@ -1,7 +1,7 @@
 use crate::chess_board;
 use crate::board;
 
-use crate::move_generation::get_legal_moves_bishop; 
+// use crate::move_generation::get_legal_moves_bishop; 
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub struct BoundedUsize<const MAX: usize>(usize);
