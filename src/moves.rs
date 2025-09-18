@@ -39,19 +39,6 @@ pub fn move_pawn(chess_board: &mut ChessBoard, square: usize, piece_move: BitBoa
     if piece_move & BBMASKS.pieces.pawn_double_moves[chess_board.current_color as usize][square] != 0 {
         chess_board.en_passant_mask = BBMASKS.pieces.pawn_moves[chess_board.current_color as usize][square];
     }
-    if (piece_index == square_index(0, 0)) {
-        chess_board.castling_availability[PieceColor::White as usize] &= !CastlingAvailability::KingSide;
-    }
-    if (piece_index == square_index(0, 7)) {
-        chess_board.castling_availability[PieceColor::White as usize] &= !CastlingAvailability::QueenSide;
-    }
-    if (piece_index == square_index(7, 0)) {
-        chess_board.castling_availability[PieceColor::Black as usize] &= !CastlingAvailability::KingSide;
-    }
-    if (piece_index == square_index(7, 7)) {
-        chess_board.castling_availability[PieceColor::Black as usize] &= !CastlingAvailability::QueenSide;
-    }
-
     if rank_index(piece_index) == 0 || rank_index(piece_index) == 7 {
         chess_board.promotion_mask = piece_move;
     }
