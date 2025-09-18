@@ -215,13 +215,6 @@ fn does_en_passant_cause_check(chess_board: &ChessBoard, square: usize) -> bool 
     true
 }
 
-// Returns the index of the least significant bit and removes it from the BitBoard
-#[inline(always)] const fn pop_lsb(bit_board: &mut BitBoard) -> usize { 
-    let index = bit_board.trailing_zeros() as usize; 
-    *bit_board &= *bit_board - 1; 
-    index
-}
-
 mod tests {
     #[allow(unused_imports)]
     use super::*;

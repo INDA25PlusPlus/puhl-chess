@@ -39,6 +39,13 @@ pub const fn get_single_bit_board(rank: isize, file: isize) -> BitBoard {
     (1 as BitBoard) << (rank as usize * BOARD_FILES + file as usize)
 }
 
+// Returns the index of the least significant bit and removes it from the BitBoard
+#[inline(always)] pub const fn pop_lsb(bit_board: &mut BitBoard) -> usize { 
+    let index = bit_board.trailing_zeros() as usize; 
+    *bit_board &= *bit_board - 1; 
+    index
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
