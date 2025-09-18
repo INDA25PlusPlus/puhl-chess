@@ -1,3 +1,4 @@
+use crate::chess_board;
 use crate::core::piece;
 
 use super::board::*;
@@ -160,9 +161,9 @@ impl ChessBoard {
         for piece_type in [PieceType::Pawn, PieceType::Knight, PieceType::Bishop, PieceType::Rook, PieceType::Queen, PieceType::King ] {
             self.pieces[piece_type as usize] &= !bb_move;
         }
-        // Only clear opposite color
-        self.all_pieces[PieceColor::White as usize] &= !bb_move;
-        self.all_pieces[PieceColor::Black as usize] &= !bb_move;
+        
+        // Only clear opposite color because you can't stack same color pieces
+        self.all_pieces[PieceColor::opposite(self.current_color) as usize] &= !bb_move;
     }
 
     fn move_piece(&mut self, bb_square: BitBoard, bb_move: BitBoard, piece_type: PieceType) {
