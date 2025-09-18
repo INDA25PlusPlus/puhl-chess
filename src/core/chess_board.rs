@@ -122,18 +122,34 @@ impl ChessBoard {
         self.promotion_mask != 0
     }
 
-    pub const fn square_with_moveable_piece(&self, bb_square: BitBoard) -> bool {
+    // If square has a piece which has the same color as the current player
+    // TODO: Switch name
+    pub const fn has_square_movable_piece(&self, bb_square: BitBoard) -> bool {
         bb_square & self.all_pieces[self.current_color as usize] != 0
+    }
+
+    pub const fn has_square_piece(&self, bb_square: BitBoard) -> bool {
+        bb_square & self.all_pieces() != 0
     }
 
     // Assumes bb_square is a valid piece
     pub fn get_piece_type(&self, bb_square: BitBoard) -> PieceType {
-        assert!(bb_square & self.all_pieces() != 0);
+        assert!(self.has_square_movable_piece(bb_square));
         for piece_type in [ PieceType::Pawn, PieceType::Knight, PieceType::Bishop,
                                        PieceType::Rook, PieceType::Queen, PieceType:: King ] {
             if self.pieces[piece_type as usize] & bb_square != 0 { return piece_type; }
         }
         unreachable!()
+    }
+
+    // Assumes bb_square is a valid piece
+    pub fn get_piece_color(&self, bb_square: BitBoard) -> PieceColor {
+        assert!(self.has_square_movable_piece(bb_square));
+        if self.all_pieces[PieceColor::White as usize] & bb_square != 0 {
+            PieceColor::White
+        } else {
+            PieceColor::Black
+        }
     }
 }
 
@@ -161,7 +177,7 @@ impl ChessBoard {
         for piece_type in [PieceType::Pawn, PieceType::Knight, PieceType::Bishop, PieceType::Rook, PieceType::Queen, PieceType::King ] {
             self.pieces[piece_type as usize] &= !bb_move;
         }
-        
+
         // Only clear opposite color because you can't stack same color pieces
         self.all_pieces[PieceColor::opposite(self.current_color) as usize] &= !bb_move;
     }
@@ -236,6 +252,45 @@ impl ChessBoard {
         self.pieces[piece_type as usize] |= self.promotion_mask;
         // Remove promotion mask
         self.promotion_mask = 0;
+    }
+}
+
+impl ChessBoard {
+    pub fn is_en_passant(&self, bb_square: BitBoard, bb_move: BitBoard) -> bool {
+        assert!(bb_move != 0);
+        assert!(bb_square != 0);
+
+        let piece_type = self.get_piece_type(bb_square);
+        piece_type == PieceType::Pawn 
+            && !self.has_square_piece(bb_move) 
+                && (bb_move & self.en_passant_mask) != 0
+    }
+
+    pub fn is_castle(&self, bb_square: BitBoard, bb_move: BitBoard) -> bool {
+        assert!(bb_move != 0);
+        assert!(bb_square != 0);
+        
+        let square = bb_square.trailing_zeros() as usize;
+        let piece_type = self.get_piece_type(bb_square);
+        let mask = BBMASKS.pieces.castling_moves[self.current_color as usize][self.castling_availability[self.current_color as usize].bits()][square];
+        piece_type == PieceType::King 
+            && (mask & bb_move) != 0
+    }
+
+    pub fn is_promotion(&self, bb_square: BitBoard, bb_move: BitBoard) -> bool {
+        assert!(bb_move != 0);
+        assert!(bb_square != 0);
+
+        let move_square = bb_move.trailing_zeros() as usize;
+        let piece_type = self.get_piece_type(bb_square);
+        (move_square == 7 || move_square == 0) && piece_type == PieceType::Pawn
+    }
+
+    pub fn is_capture(&self, bb_square: BitBoard, bb_move: BitBoard) -> bool {
+        assert!(bb_move != 0);
+        assert!(bb_square != 0);
+
+        self.has_square_piece(bb_move)
     }
 }
 
