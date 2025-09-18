@@ -122,20 +122,8 @@ pub fn move_rook(chess_board: &mut ChessBoard, square: usize, piece_move: BitBoa
 
     chess_board.en_passant_mask = 0;
 
-    // TODO: Update castling availability
-    // TODO: Make more generic / precompute
-    if (square == square_index(0, 0)) {
-        chess_board.castling_availability[PieceColor::White as usize] &= !CastlingAvailability::KingSide;
-    }
-    if (square == square_index(0, 7)) {
-        chess_board.castling_availability[PieceColor::White as usize] &= !CastlingAvailability::QueenSide;
-    }
-    if (square == square_index(7, 0)) {
-        chess_board.castling_availability[PieceColor::Black as usize] &= !CastlingAvailability::KingSide;
-    }
-    if (square == square_index(7, 7)) {
-        chess_board.castling_availability[PieceColor::Black as usize] &= !CastlingAvailability::QueenSide;
-    }
+    let removed_castling_availability = BBMASKS.pieces.castling_corners[chess_board.current_color as usize][square];
+    chess_board.castling_availability[chess_board.current_color as usize] &= !removed_castling_availability;
 
     let opposite_color = PieceColor::opposite(chess_board.current_color) as usize;
     chess_board.castling_availability[opposite_color] &= !BBMASKS.pieces.castling_corners[opposite_color][piece_index];
@@ -180,24 +168,16 @@ pub fn move_king(chess_board: &mut ChessBoard, square: usize, piece_move: BitBoa
 
     chess_board.en_passant_mask = 0;
 
-    // Castling
-    // TODO: Make more generic
-    // Add destination rook if castling
-    // let mask = !BBMASKS.pieces.castling_rook_moves[chess_board.current_color as usize][chess_board.castling_availability[square].bits()][piece_index];
-    // chess_board.pieces[PieceType::Rook as usize] &= mask;
-    // chess_board.all_pieces[chess_board.current_color as usize] &= mask;
-    // // TODO: add the correct mask
-    // // Remove source rook if castling
-    // let mask = !BBMASKS.pieces.castling_rook_moves[chess_board.current_color as usize][chess_board.castling_availability[square].bits()][piece_index];
-    // chess_board.pieces[PieceType::Rook as usize] &= mask;
-    // chess_board.all_pieces[chess_board.current_color as usize] &= mask;
-
+    // Move rook if castling
     let mask = BBMASKS.pieces.castling_rook_moves[chess_board.current_color as usize][chess_board.castling_availability[chess_board.current_color as usize].bits()][piece_index];
     assert!(chess_board.castling_availability[chess_board.current_color as usize].bits() <= 3);
     chess_board.pieces[PieceType::Rook as usize] ^= mask;
     chess_board.all_pieces[chess_board.current_color as usize] ^= mask;
 
+    // Clear own castling availability
     chess_board.castling_availability[chess_board.current_color as usize] = CastlingAvailability::None;
+
+    // Remove one of opponent castling availability if king takes one of opponents rooks in the corner
     let opposite_color = PieceColor::opposite(chess_board.current_color) as usize;
     chess_board.castling_availability[opposite_color] &= !BBMASKS.pieces.castling_corners[opposite_color][piece_index];
 }
