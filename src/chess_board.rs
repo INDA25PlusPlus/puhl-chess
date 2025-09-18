@@ -119,20 +119,32 @@ impl ChessBoard {
     pub const fn is_piece(&self, bb_square: BitBoard, piece_type: PieceType) -> bool {
         bb_square & self.pieces[piece_type as usize] != 0
     }
+
+    // Assumes bb_square is a valid piece
+    pub fn get_piece_type(&self, bb_square: BitBoard) -> PieceType {
+        assert!(bb_square & self.all_pieces() != 0);
+        for piece_type in [ PieceType::Pawn, PieceType::Knight, PieceType::Bishop,
+                                       PieceType::Rook, PieceType::Queen, PieceType:: King ] {
+            if self.pieces[piece_type as usize] & bb_square != 0 { return piece_type; }
+        }
+        unreachable!()
+    }
 }
 
 impl ChessBoard {
     pub fn make_move(&mut self, square: usize, bb_move: BitBoard) {
         assert!(bb_move != 0);
+        assert!(square < BOARD_SIZE);
 
         let bb_square = (1 as BitBoard) << square;
         let move_square = bb_move.trailing_zeros() as usize;
+        let piece_type = self.get_piece_type(bb_square);
 
         self.clear_destination(bb_move);
-        self.move_piece(bb_square, bb_move);
-        self.update_castling_rights(bb_square, square, move_square);
-        self.update_en_passant(bb_square, square, bb_move, move_square);
-        self.current_color = PieceColor::opposite(self.current_color);
+        self.move_piece(bb_square, bb_move, piece_type);
+        self.update_castling_rights(square, move_square, piece_type);
+        self.update_en_passant(square, bb_move, move_square, piece_type);
+        // self.current_color = PieceColor::opposite(self.current_color);
     }
 
     // Remove destination from all bit boards
@@ -140,20 +152,23 @@ impl ChessBoard {
         for piece_type in [PieceType::Pawn, PieceType::Knight, PieceType::Bishop, PieceType::Rook, PieceType::Queen, PieceType::King ] {
             self.pieces[piece_type as usize] &= !bb_move;
         }
+        // Only clear opposite color
         self.all_pieces[PieceColor::White as usize] &= !bb_move;
         self.all_pieces[PieceColor::Black as usize] &= !bb_move;
     }
 
-    fn move_piece(&mut self, bb_square: BitBoard, bb_move: BitBoard) {
+    fn move_piece(&mut self, bb_square: BitBoard, bb_move: BitBoard, piece_type: PieceType) {
+        // let piece_type = self.get_piece_type(bb_square);
+
         // Clear source piece
-        self.pieces[PieceType::Pawn as usize] &= !bb_square;
+        self.pieces[piece_type as usize] &= !bb_square;
         self.all_pieces[self.current_color as usize] &= !bb_square;
         // Add new destination piece
-        self.pieces[PieceType::Pawn as usize] |= bb_move;
+        self.pieces[piece_type as usize] |= bb_move;
         self.all_pieces[self.current_color as usize] |= bb_move;
     }
 
-    fn update_castling_rights(&mut self, bb_square: BitBoard, square: usize, move_square: usize) {
+    fn update_castling_rights(&mut self, square: usize, move_square: usize, piece_type: PieceType) {
         // Removes castling availability if capture of enemy rook
         let opposite_color = PieceColor::opposite(self.current_color) as usize;
         self.castling_availability[opposite_color] &= !BBMASKS.pieces.castling_corners[opposite_color][move_square];
@@ -162,7 +177,7 @@ impl ChessBoard {
         let removed_castling_availability = BBMASKS.pieces.castling_corners[self.current_color as usize][square];
         self.castling_availability[self.current_color as usize] &= !removed_castling_availability;
 
-        if self.is_piece(bb_square, PieceType::King) {
+        if piece_type == PieceType::King {
             // Move rook if castling
             let mask = BBMASKS.pieces.castling_rook_moves[self.current_color as usize][self.castling_availability[self.current_color as usize].bits()][move_square];
             assert!(self.castling_availability[self.current_color as usize].bits() <= 3);
@@ -174,8 +189,8 @@ impl ChessBoard {
         }
     }
 
-    fn update_en_passant(&mut self, bb_square: BitBoard, square: usize, bb_move: BitBoard, move_square: usize) {
-        if self.is_piece(bb_square, PieceType::Pawn) {
+    fn update_en_passant(&mut self, square: usize, bb_move: BitBoard, move_square: usize, piece_type: PieceType) {
+        if piece_type == PieceType::Pawn {
             // En passant
             if bb_move & self.en_passant_mask != 0 {
                 // The attacked piece could only be a pawn
@@ -186,6 +201,7 @@ impl ChessBoard {
                 self.pieces[PieceType::Pawn as usize] &= mask;
                 self.all_pieces[opposite_color] &= mask;
             }
+            self.en_passant_mask = 0;
 
             // Double move
             if bb_move & BBMASKS.pieces.pawn_double_moves[self.current_color as usize][square] != 0 {
@@ -196,9 +212,9 @@ impl ChessBoard {
             if rank_index(move_square) == 0 || rank_index(move_square) == 7 {
                 self.promotion_mask = bb_move;
             }
+        } else {
+            self.en_passant_mask = 0;
         }
-
-        self.en_passant_mask = 0;
     }
 }
 

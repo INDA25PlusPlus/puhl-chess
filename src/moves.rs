@@ -26,7 +26,7 @@ pub fn move_pawn(chess_board: &mut ChessBoard, square: usize, piece_move: BitBoa
     chess_board.pieces[PieceType::Pawn as usize] |= piece_move;
     chess_board.all_pieces[chess_board.current_color as usize] |= piece_move;
 
-    // en passant
+    // En passant
     if piece_move & chess_board.en_passant_mask != 0 {
         // The attacked piece could only be a pawn
         chess_board.pieces[PieceType::Pawn as usize] &= !BBMASKS.pieces.en_passant_attacks[PieceColor::opposite(chess_board.current_color) as usize][chess_board.en_passant_mask.trailing_zeros() as usize];
@@ -35,10 +35,12 @@ pub fn move_pawn(chess_board: &mut ChessBoard, square: usize, piece_move: BitBoa
 
     chess_board.en_passant_mask = 0;
 
-    // double move
+    // Double move
     if piece_move & BBMASKS.pieces.pawn_double_moves[chess_board.current_color as usize][square] != 0 {
         chess_board.en_passant_mask = BBMASKS.pieces.pawn_moves[chess_board.current_color as usize][square];
     }
+
+    // Promotion
     if rank_index(piece_index) == 0 || rank_index(piece_index) == 7 {
         chess_board.promotion_mask = piece_move;
     }

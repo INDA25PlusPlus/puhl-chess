@@ -23,12 +23,16 @@ mod tests {
                     let current_move = moves & moves.wrapping_neg();
                     let mut chess_board_clone = chess_board.clone();
                     match piece_type {
-                        PieceType::Pawn => move_pawn(&mut chess_board_clone, index, current_move),
-                        PieceType::Knight => move_knight(&mut chess_board_clone, index, current_move),
-                        PieceType::Bishop => move_bishop(&mut chess_board_clone, index, current_move),
-                        PieceType::Rook => move_rook(&mut chess_board_clone, index, current_move),
-                        PieceType::Queen => move_queen(&mut chess_board_clone, index, current_move),
-                        PieceType::King => move_king(&mut chess_board_clone, index, current_move),
+                        PieceType::Pawn => chess_board_clone.make_move(index, current_move),
+                        // PieceType::Pawn => move_pawn(&mut chess_board_clone, index, current_move),
+                        PieceType::Knight => chess_board_clone.make_move(index, current_move),
+                        // PieceType::Knight => move_knight(&mut chess_board_clone, index, current_move),
+                        PieceType::Bishop => chess_board_clone.make_move(index, current_move),
+                        // PieceType::Bishop => move_bishop(&mut chess_board_clone, index, current_move),
+                        PieceType::Rook => chess_board_clone.make_move(index, current_move),
+                        PieceType::Queen => chess_board_clone.make_move(index, current_move),
+                        // PieceType::Queen => move_queen(&mut chess_board_clone, index, current_move),
+                        PieceType::King => chess_board_clone.make_move(index, current_move),
                     }
                     chess_board_clone.current_color = PieceColor::opposite(chess_board_clone.current_color);
                     if chess_board_clone.promotion_mask != 0 {
