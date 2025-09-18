@@ -200,6 +200,7 @@ mod pieces_masks {
         // The squares between the rook and the king
         pub castling_in_between: ByColor<[BySquare; CASTLING_AVAILABILITY_SIZE]>,
         pub castling_corners: ByColor<BySquare<CastlingAvailability>>,
+        pub castling_rook_moves: ByColor<[BySquare; CASTLING_AVAILABILITY_SIZE]>,
     }
 
     // Generates the attack pattern for every piece on every square on an empty board
@@ -217,6 +218,7 @@ mod pieces_masks {
         let castling_moves = generate_castling_moves();
         let castling_in_between= generate_castling_in_between();
         let castling_corners= generate_castling_corners();
+        let castling_rook_moves = generate_castling_rook_moves();
         
         let mut i = 0;
         while i < BOARD_SIZE {
@@ -231,12 +233,13 @@ mod pieces_masks {
                 [ white_pawn, knight, bishop, rook, queen, king, ],
                 [ black_pawn, knight, bishop, rook, queen, king, ],
             ],
-            pawn_moves: pawn_moves, 
-            pawn_double_moves: pawn_double_moves,
-            en_passant_attacks: en_passant_attacks,
-            castling_moves: castling_moves,
-            castling_in_between: castling_in_between,
-            castling_corners: castling_corners,
+            pawn_moves, 
+            pawn_double_moves,
+            en_passant_attacks,
+            castling_moves,
+            castling_in_between,
+            castling_corners,
+            castling_rook_moves
         }
     }
 
@@ -333,6 +336,23 @@ mod pieces_masks {
         castling_corners[PieceColor::Black as usize][square_index(7, 7)] = CastlingAvailability::QueenSide;
 
         castling_corners
+    }
+
+    const fn generate_castling_rook_moves() -> ByColor<[BySquare; CASTLING_AVAILABILITY_SIZE]> {
+        let mut white = [[0 as BitBoard; BOARD_SIZE]; CASTLING_AVAILABILITY_SIZE];
+        let mut black = [[0 as BitBoard; BOARD_SIZE]; CASTLING_AVAILABILITY_SIZE];
+
+        const WHITE_IDX: usize = square_index(0, 3);
+        white[CastlingAvailability::KingSide.bits()][WHITE_IDX] = get_single_bit_board(0, 2);
+        white[CastlingAvailability::QueenSide.bits()][WHITE_IDX] = get_single_bit_board(0, 4);
+        white[CastlingAvailability::KingSide.bits() | CastlingAvailability::QueenSide.bits()][WHITE_IDX] = get_single_bit_board(0, 2) | get_single_bit_board(0, 4);
+
+        const BLACK_IDX: usize = square_index(7, 3);
+        black[CastlingAvailability::KingSide.bits()][BLACK_IDX] = get_single_bit_board(7, 2);
+        black[CastlingAvailability::QueenSide.bits()][BLACK_IDX] = get_single_bit_board(7, 4);
+        black[CastlingAvailability::KingSide.bits() | CastlingAvailability::QueenSide.bits()][BLACK_IDX] = get_single_bit_board(7, 2) | get_single_bit_board(7, 4);
+
+        [ white, black ]
     }
 
     const fn generate_attacks_knight() -> [BitBoard; BOARD_SIZE] {
