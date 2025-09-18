@@ -1,8 +1,8 @@
-use crate::board::*;
-use crate::chess_board::*;
-use crate::precompute_masks::*;
-use crate::dir::*;
-use crate::piece::*;
+use super::board::*;
+use super::chess_board::*;
+use super::precompute_masks::*;
+use super::dir::*;
+use super::piece::*;
 
 type MoveGenFn = fn(&ChessBoard, usize) -> BitBoard;
 

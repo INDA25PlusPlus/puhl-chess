@@ -1,6 +1,6 @@
-use crate::board::*;
-use crate::dir::*;
-use crate::piece::*;
+use super::board::*;
+use super::dir::*;
+use super::piece::*;
 
 pub const BBMASKS: BBMasks = BBMasks::new(); 
 

@@ -1,4 +1,4 @@
-use crate::board::*;
+use super::board::*;
 
 #[repr(usize)]
 #[derive(Copy, Clone, Debug, PartialEq)]
