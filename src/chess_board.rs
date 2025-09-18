@@ -1,4 +1,5 @@
 use crate::board::*;
+use crate::chess_board;
 use crate::piece::*;
 use crate::precompute_masks::*;
 
@@ -126,6 +127,7 @@ impl ChessBoard {
         self.clear_destination(bb_move);
         self.move_piece(bb_square, bb_move);
         self.update_castling_rights(move_square);
+        self.update_en_passant(move_square);
         // self.update_castling_rights();
         self.current_color = PieceColor::opposite(self.current_color);
     }
@@ -149,8 +151,15 @@ impl ChessBoard {
     }
 
     fn update_castling_rights(&mut self, move_square: usize) {
+        // Removes castling availability if capture of enemy rook
         let opposite_color = PieceColor::opposite(self.current_color) as usize;
         self.castling_availability[opposite_color] &= !BBMASKS.pieces.castling_corners[opposite_color][move_square];
+
+
+    }
+
+    fn update_en_passant(&mut self, move_square: usize) {
+        self.en_passant_mask = 0;
     }
 }
 
