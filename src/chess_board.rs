@@ -130,7 +130,7 @@ impl ChessBoard {
 
         self.clear_destination(bb_move);
         self.move_piece(bb_square, bb_move);
-        self.update_castling_rights(square, move_square);
+        self.update_castling_rights(bb_square, square, move_square);
         self.update_en_passant(bb_square, square, bb_move, move_square);
         self.current_color = PieceColor::opposite(self.current_color);
     }
@@ -153,7 +153,7 @@ impl ChessBoard {
         self.all_pieces[self.current_color as usize] |= bb_move;
     }
 
-    fn update_castling_rights(&mut self, square: usize, move_square: usize) {
+    fn update_castling_rights(&mut self, bb_square: BitBoard, square: usize, move_square: usize) {
         // Removes castling availability if capture of enemy rook
         let opposite_color = PieceColor::opposite(self.current_color) as usize;
         self.castling_availability[opposite_color] &= !BBMASKS.pieces.castling_corners[opposite_color][move_square];
@@ -162,7 +162,16 @@ impl ChessBoard {
         let removed_castling_availability = BBMASKS.pieces.castling_corners[self.current_color as usize][square];
         self.castling_availability[self.current_color as usize] &= !removed_castling_availability;
 
-        
+        if self.is_piece(bb_square, PieceType::King) {
+            // Move rook if castling
+            let mask = BBMASKS.pieces.castling_rook_moves[self.current_color as usize][self.castling_availability[self.current_color as usize].bits()][move_square];
+            assert!(self.castling_availability[self.current_color as usize].bits() <= 3);
+            self.pieces[PieceType::Rook as usize] ^= mask;
+            self.all_pieces[self.current_color as usize] ^= mask;
+
+            // Clear own castling availability
+            self.castling_availability[self.current_color as usize] = CastlingAvailability::None;
+        }
     }
 
     fn update_en_passant(&mut self, bb_square: BitBoard, square: usize, bb_move: BitBoard, move_square: usize) {
