@@ -119,9 +119,13 @@ impl ChessBoard {
         bb_square & self.pieces[piece_type as usize] != 0
     }
 
+    pub const fn does_square_contain_piece(&self, bb_square: BitBoard) -> bool {
+        bb_square & self.all_pieces() != 0
+    }
+
     // Assumes bb_square is a valid piece
     pub fn get_piece_type(&self, bb_square: BitBoard) -> PieceType {
-        assert!(bb_square & self.all_pieces() != 0);
+        assert!(self.does_square_contain_piece(bb_square));
         for piece_type in [ PieceType::Pawn, PieceType::Knight, PieceType::Bishop,
                                        PieceType::Rook, PieceType::Queen, PieceType:: King ] {
             if self.pieces[piece_type as usize] & bb_square != 0 { return piece_type; }
