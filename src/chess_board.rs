@@ -1,5 +1,6 @@
 use crate::board::*;
 use crate::piece::*;
+use crate::precompute_masks::*;
 
 #[derive(Clone)]
 pub struct ChessBoard {
@@ -112,6 +113,44 @@ impl ChessBoard {
 
     pub const fn all_pieces(&self) -> BitBoard {
         self.all_pieces[PieceColor::White as usize] | self.all_pieces[PieceColor::Black as usize]
+    }
+}
+
+impl ChessBoard {
+    pub fn make_move(&mut self, square: usize, bb_move: BitBoard) {
+        assert!(bb_move != 0);
+
+        let bb_square = (1 as BitBoard) << square;
+        let move_square = bb_move.trailing_zeros() as usize;
+
+        self.clear_destination(bb_move);
+        self.move_piece(bb_square, bb_move);
+        self.update_castling_rights(move_square);
+        // self.update_castling_rights();
+        self.current_color = PieceColor::opposite(self.current_color);
+    }
+
+    // Remove destination from all bit boards
+    fn clear_destination(&mut self, bb_move: BitBoard) {
+        for piece_type in [PieceType::Pawn, PieceType::Knight, PieceType::Bishop, PieceType::Rook, PieceType::Queen, PieceType::King ] {
+            self.pieces[piece_type as usize] &= !bb_move;
+        }
+        self.all_pieces[PieceColor::White as usize] &= !bb_move;
+        self.all_pieces[PieceColor::Black as usize] &= !bb_move;
+    }
+
+    fn move_piece(&mut self, bb_square: BitBoard, bb_move: BitBoard) {
+        // Clear source piece
+        self.pieces[PieceType::Pawn as usize] &= !bb_square;
+        self.all_pieces[self.current_color as usize] &= !bb_square;
+        // Add new destination piece
+        self.pieces[PieceType::Pawn as usize] |= bb_move;
+        self.all_pieces[self.current_color as usize] |= bb_move;
+    }
+
+    fn update_castling_rights(&mut self, move_square: usize) {
+        let opposite_color = PieceColor::opposite(self.current_color) as usize;
+        self.castling_availability[opposite_color] &= !BBMASKS.pieces.castling_corners[opposite_color][move_square];
     }
 }
 
