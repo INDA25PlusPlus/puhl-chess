@@ -1,6 +1,5 @@
 use crate::chess_board::*;
 use crate::board::*;
-use crate::piece;
 use crate::precompute_masks::*;
 use crate::piece::*;
 
@@ -15,12 +14,11 @@ fn remove_from_all(chess_board: &mut ChessBoard, bb_square: BitBoard) {
 pub fn move_pawn(chess_board: &mut ChessBoard, square: usize, piece_move: BitBoard) {
     let bb_square = get_single_bit_board(rank_index(square) as isize, file_index(square) as isize);
     // TODO: Maybe first check if it is a capture, because otherwise we don't need to clear from the rest of the boards
-    // TODO: Instead of bool, CheckBoard.white_turn should be replaced with an PieceColor enum
     let piece_index = piece_move.trailing_zeros() as usize;
 
     // Clear destination piece (not possible for it to be the same color type)
     remove_from_all(chess_board, piece_move);
-    chess_board.all_pieces[PieceColor::opposite(chess_board.current_color) as usize] &= !piece_move;
+    // chess_board.all_pieces[PieceColor::opposite(chess_board.current_color) as usize] &= !piece_move;
     // Clear source piece
     chess_board.pieces[PieceType::Pawn as usize] &= !bb_square;
     chess_board.all_pieces[chess_board.current_color as usize] &= !bb_square;
@@ -57,6 +55,9 @@ pub fn move_pawn(chess_board: &mut ChessBoard, square: usize, piece_move: BitBoa
     if rank_index(piece_index) == 0 || rank_index(piece_index) == 7 {
         chess_board.promotion_mask = piece_move;
     }
+
+    let opposite_color = PieceColor::opposite(chess_board.current_color) as usize;
+    chess_board.castling_availability[opposite_color] &= !BBMASKS.pieces.castling_corners[opposite_color][piece_index];
     // TODO: promotion
 }
 
@@ -78,18 +79,8 @@ pub fn move_knight(chess_board: &mut ChessBoard, square: usize, piece_move: BitB
 
     chess_board.en_passant_mask = 0;
 
-    if (piece_index == square_index(0, 0)) {
-        chess_board.castling_availability[PieceColor::White as usize] &= !CastlingAvailability::KingSide;
-    }
-    if (piece_index == square_index(0, 7)) {
-        chess_board.castling_availability[PieceColor::White as usize] &= !CastlingAvailability::QueenSide;
-    }
-    if (piece_index == square_index(7, 0)) {
-        chess_board.castling_availability[PieceColor::Black as usize] &= !CastlingAvailability::KingSide;
-    }
-    if (piece_index == square_index(7, 7)) {
-        chess_board.castling_availability[PieceColor::Black as usize] &= !CastlingAvailability::QueenSide;
-    }
+    let opposite_color = PieceColor::opposite(chess_board.current_color) as usize;
+    chess_board.castling_availability[opposite_color] &= !BBMASKS.pieces.castling_corners[opposite_color][piece_index];
 }
 
 pub fn move_bishop(chess_board: &mut ChessBoard, square: usize, piece_move: BitBoard) {
@@ -110,18 +101,8 @@ pub fn move_bishop(chess_board: &mut ChessBoard, square: usize, piece_move: BitB
 
     chess_board.en_passant_mask = 0;
 
-    if (piece_index == square_index(0, 0)) {
-        chess_board.castling_availability[PieceColor::White as usize] &= !CastlingAvailability::KingSide;
-    }
-    if (piece_index == square_index(0, 7)) {
-        chess_board.castling_availability[PieceColor::White as usize] &= !CastlingAvailability::QueenSide;
-    }
-    if (piece_index == square_index(7, 0)) {
-        chess_board.castling_availability[PieceColor::Black as usize] &= !CastlingAvailability::KingSide;
-    }
-    if (piece_index == square_index(7, 7)) {
-        chess_board.castling_availability[PieceColor::Black as usize] &= !CastlingAvailability::QueenSide;
-    }
+    let opposite_color = PieceColor::opposite(chess_board.current_color) as usize;
+    chess_board.castling_availability[opposite_color] &= !BBMASKS.pieces.castling_corners[opposite_color][piece_index];
 }
 pub fn move_rook(chess_board: &mut ChessBoard, square: usize, piece_move: BitBoard) {
     let bb_square = get_single_bit_board(rank_index(square) as isize, file_index(square) as isize);
@@ -156,18 +137,8 @@ pub fn move_rook(chess_board: &mut ChessBoard, square: usize, piece_move: BitBoa
         chess_board.castling_availability[PieceColor::Black as usize] &= !CastlingAvailability::QueenSide;
     }
 
-    if (piece_index == square_index(0, 0)) {
-        chess_board.castling_availability[PieceColor::White as usize] &= !CastlingAvailability::KingSide;
-    }
-    if (piece_index == square_index(0, 7)) {
-        chess_board.castling_availability[PieceColor::White as usize] &= !CastlingAvailability::QueenSide;
-    }
-    if (piece_index == square_index(7, 0)) {
-        chess_board.castling_availability[PieceColor::Black as usize] &= !CastlingAvailability::KingSide;
-    }
-    if (piece_index == square_index(7, 7)) {
-        chess_board.castling_availability[PieceColor::Black as usize] &= !CastlingAvailability::QueenSide;
-    }
+    let opposite_color = PieceColor::opposite(chess_board.current_color) as usize;
+    chess_board.castling_availability[opposite_color] &= !BBMASKS.pieces.castling_corners[opposite_color][piece_index];
 }
 
 pub fn move_queen(chess_board: &mut ChessBoard, square: usize, piece_move: BitBoard) {
@@ -188,18 +159,9 @@ pub fn move_queen(chess_board: &mut ChessBoard, square: usize, piece_move: BitBo
 
     chess_board.en_passant_mask = 0;
 
-    if (piece_index == square_index(0, 0)) {
-        chess_board.castling_availability[PieceColor::White as usize] &= !CastlingAvailability::KingSide;
-    }
-    if (piece_index == square_index(0, 7)) {
-        chess_board.castling_availability[PieceColor::White as usize] &= !CastlingAvailability::QueenSide;
-    }
-    if (piece_index == square_index(7, 0)) {
-        chess_board.castling_availability[PieceColor::Black as usize] &= !CastlingAvailability::KingSide;
-    }
-    if (piece_index == square_index(7, 7)) {
-        chess_board.castling_availability[PieceColor::Black as usize] &= !CastlingAvailability::QueenSide;
-    }
+    let opposite_color = PieceColor::opposite(chess_board.current_color) as usize;
+    // ==================================== NOTE: FIX THIS, WHEN NOT THE MASK, THE REST OF THE BITS THAT ARE NOT USED IN THE MASK WILL GET SET
+    chess_board.castling_availability[opposite_color] &= !BBMASKS.pieces.castling_corners[opposite_color][piece_index];
 }
 
 pub fn move_king(chess_board: &mut ChessBoard, square: usize, piece_move: BitBoard) {
@@ -220,43 +182,22 @@ pub fn move_king(chess_board: &mut ChessBoard, square: usize, piece_move: BitBoa
 
     // Castling
     // TODO: Make more generic
-    if (piece_move & BBMASKS.pieces.castling_moves[PieceColor::White as usize][CastlingAvailability::KingSide.bits()][square] != 0) {
-        chess_board.pieces[PieceType::Rook as usize] &= !get_single_bit_board(0, 0);
-        chess_board.all_pieces[chess_board.current_color as usize] &= !get_single_bit_board(0, 0);
-        chess_board.pieces[PieceType::Rook as usize] |= get_single_bit_board(0, 2);
-        chess_board.all_pieces[chess_board.current_color as usize] |= get_single_bit_board(0, 2);
-    }
-    if (piece_move & BBMASKS.pieces.castling_moves[PieceColor::White as usize][CastlingAvailability::QueenSide.bits()][square] != 0) {
-        chess_board.pieces[PieceType::Rook as usize] &= !get_single_bit_board(0, 7);
-        chess_board.all_pieces[chess_board.current_color as usize] &= !get_single_bit_board(0, 7);
-        chess_board.pieces[PieceType::Rook as usize] |= get_single_bit_board(0, 4);
-        chess_board.all_pieces[chess_board.current_color as usize] |= get_single_bit_board(0, 4);
-    }
-    if (piece_move & BBMASKS.pieces.castling_moves[PieceColor::Black as usize][CastlingAvailability::KingSide.bits()][square] != 0) {
-        chess_board.pieces[PieceType::Rook as usize] &= !get_single_bit_board(7, 0);
-        chess_board.all_pieces[chess_board.current_color as usize] &= !get_single_bit_board(7, 0);
-        chess_board.pieces[PieceType::Rook as usize] |= get_single_bit_board(7, 2);
-        chess_board.all_pieces[chess_board.current_color as usize] |= get_single_bit_board(7, 2);
-    }
-    if (piece_move & BBMASKS.pieces.castling_moves[PieceColor::Black as usize][CastlingAvailability::QueenSide.bits()][square] != 0) {
-        chess_board.pieces[PieceType::Rook as usize] &= !get_single_bit_board(7, 7);
-        chess_board.all_pieces[chess_board.current_color as usize] &= !get_single_bit_board(7, 7);
-        chess_board.pieces[PieceType::Rook as usize] |= get_single_bit_board(7, 4);
-        chess_board.all_pieces[chess_board.current_color as usize] |= get_single_bit_board(7, 4);
-    }
+    // Add destination rook if castling
+    // let mask = !BBMASKS.pieces.castling_rook_moves[chess_board.current_color as usize][chess_board.castling_availability[square].bits()][piece_index];
+    // chess_board.pieces[PieceType::Rook as usize] &= mask;
+    // chess_board.all_pieces[chess_board.current_color as usize] &= mask;
+    // // TODO: add the correct mask
+    // // Remove source rook if castling
+    // let mask = !BBMASKS.pieces.castling_rook_moves[chess_board.current_color as usize][chess_board.castling_availability[square].bits()][piece_index];
+    // chess_board.pieces[PieceType::Rook as usize] &= mask;
+    // chess_board.all_pieces[chess_board.current_color as usize] &= mask;
+
+    let mask = BBMASKS.pieces.castling_rook_moves[chess_board.current_color as usize][chess_board.castling_availability[chess_board.current_color as usize].bits()][piece_index];
+    assert!(chess_board.castling_availability[chess_board.current_color as usize].bits() <= 3);
+    chess_board.pieces[PieceType::Rook as usize] ^= mask;
+    chess_board.all_pieces[chess_board.current_color as usize] ^= mask;
 
     chess_board.castling_availability[chess_board.current_color as usize] = CastlingAvailability::None;
-
-    if (piece_index == square_index(0, 0)) {
-        chess_board.castling_availability[PieceColor::White as usize] &= !CastlingAvailability::KingSide;
-    }
-    if (piece_index == square_index(0, 7)) {
-        chess_board.castling_availability[PieceColor::White as usize] &= !CastlingAvailability::QueenSide;
-    }
-    if (piece_index == square_index(7, 0)) {
-        chess_board.castling_availability[PieceColor::Black as usize] &= !CastlingAvailability::KingSide;
-    }
-    if (piece_index == square_index(7, 7)) {
-        chess_board.castling_availability[PieceColor::Black as usize] &= !CastlingAvailability::QueenSide;
-    }
+    let opposite_color = PieceColor::opposite(chess_board.current_color) as usize;
+    chess_board.castling_availability[opposite_color] &= !BBMASKS.pieces.castling_corners[opposite_color][piece_index];
 }
