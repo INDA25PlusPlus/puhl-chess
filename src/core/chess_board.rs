@@ -1,4 +1,5 @@
 use crate::chess_board;
+use crate::core::move_generation::get_pieces_attacking_king;
 use crate::core::piece;
 
 use super::board::*;
@@ -151,6 +152,10 @@ impl ChessBoard {
             PieceColor::Black
         }
     }
+
+    pub fn is_current_player_in_check(&self) -> bool {
+        get_pieces_attacking_king(self, PieceColor::opposite(self.current_color)) != 0
+    }
 }
 
 impl ChessBoard {
@@ -275,15 +280,6 @@ impl ChessBoard {
         let mask = BBMASKS.pieces.castling_moves[self.current_color as usize][self.castling_availability[self.current_color as usize].bits()][square];
         piece_type == PieceType::King 
             && (mask & bb_move) != 0
-    }
-
-    pub fn is_promotion(&self, bb_square: BitBoard, bb_move: BitBoard) -> bool {
-        assert!(bb_move != 0);
-        assert!(bb_square != 0);
-
-        let move_square = bb_move.trailing_zeros() as usize;
-        let piece_type = self.get_piece_type(bb_square);
-        (move_square == 7 || move_square == 0) && piece_type == PieceType::Pawn
     }
 
     pub fn is_capture(&self, bb_square: BitBoard, bb_move: BitBoard) -> bool {

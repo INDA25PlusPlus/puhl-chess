@@ -19,14 +19,14 @@ mod tests {
                     Some(m) => m,
                 };
                 for chess_move in moves {
-                    let chess_board = chess_move.make_move();
+                    let (chess_board, _)= chess_move.make_move();
                     match chess_board {
                         MoveResult::ChessBoard(chess_board) => { 
                             count += count_moves(&chess_board, depth - 1);
                         }
                         MoveResult::PawnPromotionResolver(pawn_promotion_resolver) => {
                             for promotion_piece in [ PieceType::Knight, PieceType::Bishop, PieceType::Rook, PieceType::Queen ] {
-                                let chess_board= match promotion_piece {
+                                let (chess_board, _)= match promotion_piece {
                                     PieceType::Knight => pawn_promotion_resolver.resolve_knight(),
                                     PieceType::Bishop => pawn_promotion_resolver.resolve_bishop(),
                                     PieceType::Rook => pawn_promotion_resolver.resolve_rook(),
