@@ -8,7 +8,7 @@ pub const BOARD_SIZE: usize = BOARD_RANKS * BOARD_FILES;
 pub type BySquare<T = BitBoard> = [T; BOARD_SIZE];
 
 bitflags! {
-    #[derive(PartialEq, Clone, Copy)]
+    #[derive(PartialEq, Clone, Copy, Debug)]
     pub struct CastlingAvailability: usize {
         const None      = 0;
         const KingSide  = 1;

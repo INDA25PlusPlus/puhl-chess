@@ -1,12 +1,9 @@
-use crate::chess_board;
 use crate::core::move_generation::get_pieces_attacking_king;
-use crate::core::piece;
-
 use super::board::*;
 use super::piece::*;
 use super::precompute_masks::*;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct ChessBoard {
     pub all_pieces: ByColor<BitBoard>,
 
@@ -135,7 +132,7 @@ impl ChessBoard {
 
     // Assumes bb_square is a valid piece
     pub fn get_piece_type(&self, bb_square: BitBoard) -> PieceType {
-        assert!(self.has_square_movable_piece(bb_square));
+        assert!(self.has_square_piece(bb_square));
         for piece_type in [ PieceType::Pawn, PieceType::Knight, PieceType::Bishop,
                                        PieceType::Rook, PieceType::Queen, PieceType:: King ] {
             if self.pieces[piece_type as usize] & bb_square != 0 { return piece_type; }

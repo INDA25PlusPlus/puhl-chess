@@ -7,10 +7,10 @@ use super::piece::*;
 type MoveGenFn = fn(&ChessBoard, usize) -> BitBoard;
 
 pub fn get_pieces_attacking_king(chess_board: &ChessBoard, by_side: PieceColor) -> BitBoard {
-    let bb_king = chess_board.pieces[PieceType::King as usize] & chess_board.all_pieces[by_side as usize];
+    let bb_king = chess_board.pieces[PieceType::King as usize] & chess_board.all_pieces[PieceColor::opposite(by_side) as usize];
     assert!(bb_king != 0);
     let king_square = bb_king.trailing_zeros() as usize;
-    
+
     get_pieces_attacking_square(chess_board, king_square, by_side, chess_board.all_pieces())
 }
 

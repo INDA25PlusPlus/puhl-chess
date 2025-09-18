@@ -1,5 +1,3 @@
-use bitflags::bitflags;
-use crate::chess_board;
 use crate::core::board::*;
 use crate::core::move_generation::*;
 use crate::core::chess_board as internal;
@@ -39,19 +37,21 @@ impl Index {
 
 }
 
+#[derive(Debug)]
 pub enum GameState {
     Win(PieceColor),
     Draw,
     Playing,
 }
 
+#[derive(Debug)]
 pub struct ChessBoardInfo {
-    player_turn: PieceColor,
-    is_current_player_in_check: bool,
-    game_state: GameState
+    pub player_turn: PieceColor,
+    pub is_current_player_in_check: bool,
+    pub game_state: GameState
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct ChessBoard {
     inner: internal::ChessBoard,
 }
@@ -105,6 +105,7 @@ impl ChessBoard {
     }
 }
 
+#[derive(Debug)]
 pub struct PawnPromotionResolver {
     pub chess_board: ChessBoard,
 }
@@ -134,6 +135,7 @@ impl PawnPromotionResolver {
     }
 }
 
+#[derive(Debug)]
 pub enum MoveType {
     Normal( Option<PieceType> ),
     Promotion,
@@ -141,6 +143,7 @@ pub enum MoveType {
     EnPassant,
 }
 
+#[derive(Debug)]
 pub enum MoveResult {
     ChessBoard (ChessBoard),
     PawnPromotionResolver (PawnPromotionResolver)
@@ -155,7 +158,7 @@ pub struct Move<'a> {
 impl<'a> Move<'a> {
     fn get_move_type(&self) -> MoveType {
         let bb_src = self.src.as_bb();
-        let bb_dst = self.src.as_bb();
+        let bb_dst = self.dst.as_bb();
 
         if self.chess_board.inner.is_castle(bb_src, bb_dst) {
             MoveType::Castling
