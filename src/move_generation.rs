@@ -4,7 +4,20 @@ use crate::precompute_masks::*;
 use crate::dir::*;
 use crate::piece::*;
 
-pub fn get_legal_moves_pawn(chess_board: &ChessBoard, square: usize) -> BitBoard {
+type MoveGenFn = fn(&ChessBoard, usize) -> BitBoard;
+
+pub fn get_move_generator(piece_type: PieceType) -> MoveGenFn {
+    match piece_type {
+        PieceType::Pawn   => get_legal_moves_pawn,
+        PieceType::Knight => get_legal_moves_knight,
+        PieceType::Bishop => get_legal_moves_bishop,
+        PieceType::Rook   => get_legal_moves_rook,
+        PieceType::Queen  => get_legal_moves_queen,
+        PieceType::King   => get_legal_moves_king,
+    }
+}
+
+fn get_legal_moves_pawn(chess_board: &ChessBoard, square: usize) -> BitBoard {
     let mut pseudo_legal_moves = BBMASKS.pieces.attacks[chess_board.current_color as usize][PieceType::Pawn as usize][square] 
                                     & chess_board.all_pieces[PieceColor::opposite(chess_board.current_color) as usize];
     if (BBMASKS.pieces.attacks[chess_board.current_color as usize][PieceType::Pawn as usize][square] & chess_board.en_passant_mask) != 0 
@@ -12,7 +25,7 @@ pub fn get_legal_moves_pawn(chess_board: &ChessBoard, square: usize) -> BitBoard
         pseudo_legal_moves |= chess_board.en_passant_mask;
     }
 
-    // Check if another piece is blocking the pawn move
+    // Checks if another piece is blocking the pawn move
     if (BBMASKS.pieces.pawn_moves[chess_board.current_color as usize][square] & chess_board.all_pieces()) == 0 {
         pseudo_legal_moves |= BBMASKS.pieces.pawn_moves[chess_board.current_color as usize][square];
         pseudo_legal_moves |= BBMASKS.pieces.pawn_double_moves[chess_board.current_color as usize][square] & !chess_board.all_pieces();
@@ -29,7 +42,7 @@ pub fn get_legal_moves_pawn(chess_board: &ChessBoard, square: usize) -> BitBoard
     pseudo_legal_moves & check_blocking_moves
 }
 
-pub fn get_legal_moves_bishop(chess_board: &ChessBoard, square: usize) -> BitBoard {
+fn get_legal_moves_bishop(chess_board: &ChessBoard, square: usize) -> BitBoard {
     let moves_on_empty_board = BBMASKS.pieces.attacks[chess_board.current_color as usize][PieceType::Bishop as usize][square];
     let pseudo_legal_moves = pseudo_legal_moves_sliding_piece(square, moves_on_empty_board, chess_board.all_pieces()) 
                                     & !chess_board.all_pieces[chess_board.current_color as usize];
@@ -37,7 +50,7 @@ pub fn get_legal_moves_bishop(chess_board: &ChessBoard, square: usize) -> BitBoa
     check_blocking_moves & pseudo_legal_moves
 }
 
-pub fn get_legal_moves_rook(chess_board: &ChessBoard, square: usize) -> BitBoard {
+fn get_legal_moves_rook(chess_board: &ChessBoard, square: usize) -> BitBoard {
     let moves_on_empty_board = BBMASKS.pieces.attacks[chess_board.current_color as usize][PieceType::Rook as usize][square];
     let pseudo_legal_moves = pseudo_legal_moves_sliding_piece(square, moves_on_empty_board, chess_board.all_pieces()) 
                                     & !chess_board.all_pieces[chess_board.current_color as usize];
@@ -45,11 +58,11 @@ pub fn get_legal_moves_rook(chess_board: &ChessBoard, square: usize) -> BitBoard
     check_blocking_moves & pseudo_legal_moves
 }
 
-pub fn get_legal_moves_queen(chess_board: &ChessBoard, square: usize) -> BitBoard{
+fn get_legal_moves_queen(chess_board: &ChessBoard, square: usize) -> BitBoard{
     get_legal_moves_bishop(chess_board, square) | get_legal_moves_rook(chess_board, square)
 }
 
-pub fn get_legal_moves_knight(chess_board: &ChessBoard, square: usize) -> BitBoard {
+fn get_legal_moves_knight(chess_board: &ChessBoard, square: usize) -> BitBoard {
     let pseudo_legal_moves = BBMASKS.pieces.attacks[chess_board.current_color as usize][PieceType::Knight as usize][square] & !chess_board.all_pieces[chess_board.current_color as usize];
     let check_blocking_moves = get_squares_blocking_check(&chess_board, square);
     pseudo_legal_moves & check_blocking_moves
@@ -57,7 +70,7 @@ pub fn get_legal_moves_knight(chess_board: &ChessBoard, square: usize) -> BitBoa
 
 // NOTE: Could also just calculate every square opposite side is attacking and take the intersection between it and the king attacks bit mask
 // TODO: Maybe check if that is faster
-pub fn get_legal_moves_king(chess_board: &ChessBoard, square: usize) -> BitBoard {
+fn get_legal_moves_king(chess_board: &ChessBoard, square: usize) -> BitBoard {
     // Calculate all legal moves except castling
     let bb_square = get_single_bit_board(rank_index(square) as isize, file_index(square) as isize);
     let mut legal_moves = BBMASKS.pieces.attacks[chess_board.current_color as usize][PieceType::King as usize][square] & !chess_board.all_pieces[chess_board.current_color as usize];
