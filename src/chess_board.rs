@@ -115,6 +115,10 @@ impl ChessBoard {
     pub const fn all_pieces(&self) -> BitBoard {
         self.all_pieces[PieceColor::White as usize] | self.all_pieces[PieceColor::Black as usize]
     }
+
+    pub const fn is_piece(&self, bb_square: BitBoard, piece_type: PieceType) -> bool {
+        bb_square & self.pieces[piece_type as usize] != 0
+    }
 }
 
 impl ChessBoard {
@@ -126,9 +130,8 @@ impl ChessBoard {
 
         self.clear_destination(bb_move);
         self.move_piece(bb_square, bb_move);
-        self.update_castling_rights(move_square);
-        self.update_en_passant(move_square);
-        // self.update_castling_rights();
+        self.update_castling_rights(square, move_square);
+        self.update_en_passant(bb_square, square, bb_move, move_square);
         self.current_color = PieceColor::opposite(self.current_color);
     }
 
@@ -150,15 +153,42 @@ impl ChessBoard {
         self.all_pieces[self.current_color as usize] |= bb_move;
     }
 
-    fn update_castling_rights(&mut self, move_square: usize) {
+    fn update_castling_rights(&mut self, square: usize, move_square: usize) {
         // Removes castling availability if capture of enemy rook
         let opposite_color = PieceColor::opposite(self.current_color) as usize;
         self.castling_availability[opposite_color] &= !BBMASKS.pieces.castling_corners[opposite_color][move_square];
 
+        // Remove castling availability if rook moves
+        let removed_castling_availability = BBMASKS.pieces.castling_corners[self.current_color as usize][square];
+        self.castling_availability[self.current_color as usize] &= !removed_castling_availability;
 
+        
     }
 
-    fn update_en_passant(&mut self, move_square: usize) {
+    fn update_en_passant(&mut self, bb_square: BitBoard, square: usize, bb_move: BitBoard, move_square: usize) {
+        if self.is_piece(bb_square, PieceType::Pawn) {
+            // En passant
+            if bb_move & self.en_passant_mask != 0 {
+                // The attacked piece could only be a pawn
+                let en_passant_index = self.en_passant_mask.trailing_zeros() as usize;
+                let opposite_color = PieceColor::opposite(self.current_color) as usize;
+                let mask = !BBMASKS.pieces.en_passant_attacks[opposite_color][en_passant_index];
+ 
+                self.pieces[PieceType::Pawn as usize] &= mask;
+                self.all_pieces[opposite_color] &= mask;
+            }
+
+            // Double move
+            if bb_move & BBMASKS.pieces.pawn_double_moves[self.current_color as usize][square] != 0 {
+                self.en_passant_mask = BBMASKS.pieces.pawn_moves[self.current_color as usize][square];
+            }
+
+            // Promotion
+            if rank_index(move_square) == 0 || rank_index(move_square) == 7 {
+                self.promotion_mask = bb_move;
+            }
+        }
+
         self.en_passant_mask = 0;
     }
 }
