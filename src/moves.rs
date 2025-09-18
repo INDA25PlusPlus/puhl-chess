@@ -109,6 +109,7 @@ pub fn move_rook(chess_board: &mut ChessBoard, square: usize, piece_move: BitBoa
 
     chess_board.en_passant_mask = 0;
 
+    // Remove castling availability if rook moves
     let removed_castling_availability = BBMASKS.pieces.castling_corners[chess_board.current_color as usize][square];
     chess_board.castling_availability[chess_board.current_color as usize] &= !removed_castling_availability;
 
