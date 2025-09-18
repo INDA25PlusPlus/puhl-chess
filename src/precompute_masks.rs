@@ -314,19 +314,19 @@ mod pieces_masks {
         let mut white = [[0 as BitBoard; BOARD_SIZE]; CASTLING_AVAILABILITY_SIZE];
         let mut black = [[0 as BitBoard; BOARD_SIZE]; CASTLING_AVAILABILITY_SIZE];
 
-        white[CastlingAvailability::KingSide.bits()][square_index(0, 1)] = 0x0000000000000006;
-        white[CastlingAvailability::QueenSide.bits()][square_index(0, 5)] = 0x0000000000000070;
-        white[CastlingAvailability::KingSide.bits() | CastlingAvailability::QueenSide.bits()][square_index(0, 1)] = 0x0000000000000006;
-        white[CastlingAvailability::KingSide.bits() | CastlingAvailability::QueenSide.bits()][square_index(0, 5)] = 0x0000000000000070;
+        const WHITE_IDX: usize = square_index(0, 3);
+        white[CastlingAvailability::KingSide.bits()][WHITE_IDX] = 0x0000000000000006;
+        white[CastlingAvailability::QueenSide.bits()][WHITE_IDX] = 0x0000000000000070;
+        white[CastlingAvailability::KingSide.bits() | CastlingAvailability::QueenSide.bits()][WHITE_IDX] = 0x0000000000000076;
 
-        black[CastlingAvailability::KingSide.bits()][square_index(7, 1)] = 0x0600000000000000;
-        black[CastlingAvailability::QueenSide.bits()][square_index(7, 5)] = 0x7000000000000000;
-        black[CastlingAvailability::KingSide.bits() | CastlingAvailability::QueenSide.bits()][square_index(7, 1)] = 0x0600000000000000;
-        black[CastlingAvailability::KingSide.bits() | CastlingAvailability::QueenSide.bits()][square_index(7, 5)] = 0x7000000000000000;
+        const BLACK_IDX: usize = square_index(7, 3);
+        black[CastlingAvailability::KingSide.bits()][BLACK_IDX] = 0x0600000000000000;
+        black[CastlingAvailability::QueenSide.bits()][BLACK_IDX] = 0x7000000000000000;
+        black[CastlingAvailability::KingSide.bits() | CastlingAvailability::QueenSide.bits()][BLACK_IDX] = 0x7600000000000000;
 
         [ white, black ]
     }
-
+    
     const fn generate_castling_corners() -> ByColor<BySquare<CastlingAvailability>> {
         let mut castling_corners = [[CastlingAvailability::None; BOARD_SIZE]; PIECE_COLOR_COUNT];
 
@@ -342,15 +342,15 @@ mod pieces_masks {
         let mut white = [[0 as BitBoard; BOARD_SIZE]; CASTLING_AVAILABILITY_SIZE];
         let mut black = [[0 as BitBoard; BOARD_SIZE]; CASTLING_AVAILABILITY_SIZE];
 
-        const WHITE_IDX: usize = square_index(0, 3);
-        white[CastlingAvailability::KingSide.bits()][WHITE_IDX] = get_single_bit_board(0, 2);
-        white[CastlingAvailability::QueenSide.bits()][WHITE_IDX] = get_single_bit_board(0, 4);
-        white[CastlingAvailability::KingSide.bits() | CastlingAvailability::QueenSide.bits()][WHITE_IDX] = get_single_bit_board(0, 2) | get_single_bit_board(0, 4);
+        white[CastlingAvailability::KingSide.bits()][square_index(0, 1)] = 0x0000000000000005;
+        white[CastlingAvailability::QueenSide.bits()][square_index(0, 5)] = 0x0000000000000090;
+        white[CastlingAvailability::KingSide.bits() | CastlingAvailability::QueenSide.bits()][square_index(0, 1)] = 0x0000000000000005;
+        white[CastlingAvailability::KingSide.bits() | CastlingAvailability::QueenSide.bits()][square_index(0, 5)] = 0x0000000000000090;
 
-        const BLACK_IDX: usize = square_index(7, 3);
-        black[CastlingAvailability::KingSide.bits()][BLACK_IDX] = get_single_bit_board(7, 2);
-        black[CastlingAvailability::QueenSide.bits()][BLACK_IDX] = get_single_bit_board(7, 4);
-        black[CastlingAvailability::KingSide.bits() | CastlingAvailability::QueenSide.bits()][BLACK_IDX] = get_single_bit_board(7, 2) | get_single_bit_board(7, 4);
+        black[CastlingAvailability::KingSide.bits()][square_index(7, 1)] = 0x0500000000000000;
+        black[CastlingAvailability::QueenSide.bits()][square_index(7, 5)] = 0x9000000000000000;
+        black[CastlingAvailability::KingSide.bits() | CastlingAvailability::QueenSide.bits()][square_index(7, 1)] = 0x0500000000000000;
+        black[CastlingAvailability::KingSide.bits() | CastlingAvailability::QueenSide.bits()][square_index(7, 5)] = 0x9000000000000000;
 
         [ white, black ]
     }
