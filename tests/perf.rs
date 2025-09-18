@@ -16,14 +16,7 @@ mod tests {
             let mut current = chess_board.pieces[piece_type as usize] & chess_board.all_pieces[chess_board.current_color as usize];
             while current != 0 {
                 let index = current.trailing_zeros() as usize;
-                let mut moves = match piece_type {
-                    PieceType::Pawn => get_legal_moves_pawn(chess_board, index),
-                    PieceType::Knight => get_legal_moves_knight(chess_board, index),
-                    PieceType::Bishop => get_legal_moves_bishop(chess_board, index),
-                    PieceType::Rook => get_legal_moves_rook(chess_board, index),
-                    PieceType::Queen => get_legal_moves_queen(chess_board, index),
-                    PieceType::King => get_legal_moves_king(chess_board, index),
-                };
+                let mut moves = get_move_generator(piece_type)(chess_board, index);
                 // count += moves.count_ones();
                 while moves != 0 {
                     // Single out the last bit
@@ -118,6 +111,22 @@ mod tests {
         let mut chess_board = ChessBoard::new("r2q1rk1/pP1p2pp/Q4n2/bbp1p3/Np6/1B3NBn/pPPP1PPP/R3K2R b KQ - 0 1 ");
         let count = count_moves(&mut chess_board, 1);
         assert_eq!(count, 6);
+
+        let mut chess_board = ChessBoard::new("r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1 w - - 0 10 ");
+        let count = count_moves(&mut chess_board, 3);
+        assert_eq!(count, 89890);
+
+        let mut chess_board = ChessBoard::new("rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8  ");
+        let count = count_moves(&mut chess_board, 3);
+        assert_eq!(count, 62379);
+
+        let mut chess_board = ChessBoard::new("rnbq3r/pp1Pbppp/2p5/8/2B3n1/8/PPP1N1kP/RNBQK2R w KQ - 1 8");
+        let count = count_moves(&mut chess_board, 3);
+        assert_eq!(count, 56032);
+
+        let mut chess_board = ChessBoard::new("rnbq1k1r/pp1Pbp1p/2p5/8/2B3n1/8/PPP1N1pP/RNBQK2R w KQ - 1 8");
+        let count = count_moves(&mut chess_board, 3);
+        assert_eq!(count, 54734);
     }
 
     #[test]
