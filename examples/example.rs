@@ -1,6 +1,6 @@
 /// Simple chess program showing how to use the chess library interface
 use std::{io};
-use chess_game::*;
+use puhl_chess::*;
 
 fn read_two_numbers() -> (i32, i32) {
     let mut input = String::new();

@@ -1,5 +1,5 @@
 // https://www.chessprogramming.org/Perft
-use chess_game::*;
+use puhl_chess::*;
 
 mod tests {
     use super::*;
