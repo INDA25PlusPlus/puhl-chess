@@ -25,7 +25,7 @@ fn read_one_number() -> i32 {
 }
 
 fn main() {
-    let mut chess_board = ChessBoard::new(Some("k7/7R/8/8/8/8/N4B2/3K4 w - - 0 1"));
+    let mut chess_board = ChessBoard::new(Some("k7/7R/8/8/8/8/N4B2/3K4 w - - 0 1")).unwrap();
 
     loop {
         let (rank, file) = read_two_numbers();

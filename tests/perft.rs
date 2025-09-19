@@ -45,7 +45,7 @@ mod tests {
 
     // ======= https://www.chessprogramming.org/Perft_Results =======
     fn test_position_helper(fen: &str, max_depth: usize, results: Vec<u64>) {
-        let chess_board = ChessBoard::new(Some(fen));
+        let chess_board = ChessBoard::new(Some(fen)).unwrap();
         for (depth , result) in std::iter::zip(1..max_depth, results ){
             let count = count_moves(&chess_board, depth);
             assert_eq!(count, result);
@@ -84,7 +84,7 @@ mod tests {
 
     #[test]
     fn test_pawn_promotion() {
-        let mut chess_board = ChessBoard::new(Some("r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1"));
+        let mut chess_board = ChessBoard::new(Some("r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1")).unwrap();
         let count = count_moves(&mut chess_board, 4);
         assert_eq!(count, 422333);
     }

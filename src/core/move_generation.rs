@@ -264,47 +264,47 @@ mod tests {
     #[test]
     fn test_all_squares_which_block_check() {
         // https://lichess.org/editor/4k3/7p/2n2Pp1/2bq1bK1/p2P2PR/P1p2P2/1RP5/3BQ3_w_-_-_0_1?color=white
-        let chess_board = ChessBoard::new("4k3/7p/2n2Pp1/2bq1bK1/p2P2PR/P1p2P2/1RP5/3BQ3 b - - 0 1");
+        let chess_board = ChessBoard::new("4k3/7p/2n2Pp1/2bq1bK1/p2P2PR/P1p2P2/1RP5/3BQ3 b - - 0 1").unwrap();
         let squares = get_squares_blocking_check(&chess_board, square_index(4, 2));
         assert_eq!(squares, 0x0008080808080808);
 
         // https://lichess.org/editor/8/7p/2n2Pp1/2bqkbK1/p2P2PR/P1p2P2/1RP5/3BQ3_w_-_-_0_1?color=white
-        let chess_board = ChessBoard::new("8/7p/2n2Pp1/2bqkbK1/p2P2PR/P1p2P2/1RP5/3BQ3 b - - 0 1");
+        let chess_board = ChessBoard::new("8/7p/2n2Pp1/2bqkbK1/p2P2PR/P1p2P2/1RP5/3BQ3 b - - 0 1").unwrap();
         let squares = get_squares_blocking_check(&chess_board, square_index(4, 2));
         assert_eq!(squares, 0);
 
         // https://lichess.org/editor/8/7p/2n2Pp1/2bq1bK1/p2P2PR/P1p1kP2/1RP5/3BQ3_w_-_-_0_1?color=white
-        let chess_board = ChessBoard::new("8/7p/2n2Pp1/2bq1bK1/p2P2PR/P1p1kP2/1RP5/3BQ3 b - - 0 1");
+        let chess_board = ChessBoard::new("8/7p/2n2Pp1/2bq1bK1/p2P2PR/P1p1kP2/1RP5/3BQ3 b - - 0 1").unwrap();
         let squares = get_squares_blocking_check(&chess_board, square_index(4, 2));
         assert_eq!(squares, 0x0000000000000808);
 
         // https://lichess.org/editor/8/7p/2n2Pp1/2bq1bK1/p2P2PR/P1p2P2/1RPk4/3BQ3_w_-_-_0_1?color=white
-        let chess_board = ChessBoard::new("8/7p/2n2Pp1/2bq1bK1/p2P2PR/P1p2P2/1RPk4/3BQ3 b - - 0 1");
+        let chess_board = ChessBoard::new("8/7p/2n2Pp1/2bq1bK1/p2P2PR/P1p2P2/1RPk4/3BQ3 b - - 0 1").unwrap();
         let squares = get_squares_blocking_check(&chess_board, square_index(4, 2));
         assert_eq!(squares, 0x0000000000000008);
 
         // https://lichess.org/editor/4k3/7p/2n2Pp1/K1bq4/p2Pb1PR/P1p2P2/1RP5/3BQ3_w_-_-_0_1?color=white
-        let chess_board = ChessBoard::new("4k3/7p/2n2Pp1/K1bq4/p2Pb1PR/P1p2P2/1RP5/3BQ3 b - - 0 1");
+        let chess_board = ChessBoard::new("4k3/7p/2n2Pp1/K1bq4/p2Pb1PR/P1p2P2/1RP5/3BQ3 b - - 0 1").unwrap();
         let squares = get_squares_blocking_check(&chess_board, square_index(3, 3));
         assert_eq!(squares, 0x0008080808080808);
 
         // https://lichess.org/editor/4k3/7p/2n2Pp1/K1bq4/p2Pb1PR/P1p2P2/1RP5/3BQ3_w_-_-_0_1?color=white
-        let chess_board = ChessBoard::new("4k3/5P1p/2n3p1/K1bq4/p2Pb1PR/P1p2P2/1RP5/3BQ3 b - - 0 1");
+        let chess_board = ChessBoard::new("4k3/5P1p/2n3p1/K1bq4/p2Pb1PR/P1p2P2/1RP5/3BQ3 b - - 0 1").unwrap();
         let squares = get_squares_blocking_check(&chess_board, square_index(3, 3));
         assert_eq!(squares, 0);
 
         // https://lichess.org/editor/4k3/7p/2n2Pp1/K1bq4/p2Pb1PR/P1p2P2/1RP5/3BQ3_w_-_-_0_1?color=white
-        let chess_board = ChessBoard::new("4k3/6Pp/2n1R1p1/K1bq4/p2Pb1PR/P1p2P2/2P5/3BQ3 b - - 0 1");
+        let chess_board = ChessBoard::new("4k3/6Pp/2n1R1p1/K1bq4/p2Pb1PR/P1p2P2/2P5/3BQ3 b - - 0 1").unwrap();
         let squares = get_squares_blocking_check(&chess_board, square_index(3, 3));
         assert_eq!(squares, 0x0008080000000000);
 
         // https://lichess.org/editor/8/6Pp/2n1R1p1/K1bq4/p2PbkPR/P1p2P2/2P5/3BQ3_w_-_-_0_1?color=white
-        let chess_board = ChessBoard::new("8/6Pp/2n1R1p1/K1bq4/p2PbkPR/P1p2P2/2P5/3BQ3 b - - 0 1");
+        let chess_board = ChessBoard::new("8/6Pp/2n1R1p1/K1bq4/p2PbkPR/P1p2P2/2P5/3BQ3 b - - 0 1").unwrap();
         let squares = get_squares_blocking_check(&chess_board, square_index(3, 3));
         assert_eq!(squares, BitBoard::MAX);
 
         // https://lichess.org/editor/1q6/3k2pp/2n1R3/2b2K2/p2Pb1BR/P1p2P2/2P5/4Q3_w_-_-_0_1?color=white
-        let chess_board = ChessBoard::new("1q6/3k2pp/2n1R3/2b2K2/p2Pb1BR/P1p2P2/2P5/4Q3 w - - 0 1");
+        let chess_board = ChessBoard::new("1q6/3k2pp/2n1R3/2b2K2/p2Pb1BR/P1p2P2/2P5/4Q3 w - - 0 1").unwrap();
         let squares = get_squares_blocking_check(&chess_board, square_index(2, 2));
         assert_eq!(squares, 0x0000000008000000);
     }
@@ -312,25 +312,25 @@ mod tests {
     #[test]
     fn test_get_legal_moves_bishop() {
         // https://lichess.org/editor/1q2B3/3k2pp/2n1R3/2b2K2/p2Pb2R/P1p2P2/2P5/4Q3_w_-_-_0_1?color=white 
-        let chess_board = ChessBoard::new("1q2B3/3k2pp/2n1R3/2b2K2/p2Pb2R/P1p2P2/2P5/4Q3 b - - 0 1");
+        let chess_board = ChessBoard::new("1q2B3/3k2pp/2n1R3/2b2K2/p2Pb2R/P1p2P2/2P5/4Q3 b - - 0 1").unwrap();
         let squares = get_legal_moves_bishop(&chess_board, square_index(3, 3));
         assert_eq!(squares, 0);
 
         // https://lichess.org/editor/1q2B3/3k2pp/2n1R1b1/2b2K2/p2P3R/P1p2P2/2P5/4Q3_w_-_-_0_1?color=white
-        let chess_board = ChessBoard::new("1q2B3/3k2pp/2n1R1b1/2b2K2/p2P3R/P1p2P2/2P5/4Q3 b - - 0 1");
+        let chess_board = ChessBoard::new("1q2B3/3k2pp/2n1R1b1/2b2K2/p2P3R/P1p2P2/2P5/4Q3 b - - 0 1").unwrap();
         let squares = get_legal_moves_bishop(&chess_board, square_index(5, 1));
         assert_eq!(squares, 0x0800000000000000);
 
-        let chess_board = ChessBoard::new("1q6/3k1Bpp/2n1R1b1/2b2K2/p2P3R/P1p2P2/2P5/4Q3 b - - 0 1");
+        let chess_board = ChessBoard::new("1q6/3k1Bpp/2n1R1b1/2b2K2/p2P3R/P1p2P2/2P5/4Q3 b - - 0 1").unwrap();
         let squares = get_legal_moves_bishop(&chess_board, square_index(5, 1));
         assert_eq!(squares, 0x0004000500000000);
 
-        let chess_board = ChessBoard::new("1k6/3KnRpp/8/2bB4/p4P1R/PPpq1b2/2P5/4Q3 w - - 0 1");
+        let chess_board = ChessBoard::new("1k6/3KnRpp/8/2bB4/p4P1R/PPpq1b2/2P5/4Q3 w - - 0 1").unwrap();
         let squares = get_legal_moves_bishop(&chess_board, square_index(4, 4));
         assert_eq!(squares, 0);
 
         // https://lichess.org/editor/6k1/1K2nRpp/8/3B4/p4P1R/PPpq1b2/2P3b1/4Q3_w_-_-_0_1?color=white
-        let chess_board = ChessBoard::new("6k1/1K2nRpp/8/3B4/p4P1R/PPpq1b2/2P3b1/4Q3 w - - 0 1");
+        let chess_board = ChessBoard::new("6k1/1K2nRpp/8/3B4/p4P1R/PPpq1b2/2P3b1/4Q3 w - - 0 1").unwrap();
         let squares = get_legal_moves_bishop(&chess_board, square_index(4, 4));
         assert_eq!(squares, 0x0000200008040000);
     }
@@ -338,22 +338,22 @@ mod tests {
     #[test]
     fn test_get_legal_moves_rook() {
         // https://lichess.org/editor/3R2k1/1K4pp/3n4/3B4/p4P1R/PPpq1b2/2P3b1/4Q3_w_-_-_0_1?color=white
-        let chess_board = ChessBoard::new("3R2k1/1K4pp/3n4/3B4/p4P1R/PPpq1b2/2P3b1/4Q3 w - - 0 1");
+        let chess_board = ChessBoard::new("3R2k1/1K4pp/3n4/3B4/p4P1R/PPpq1b2/2P3b1/4Q3 w - - 0 1").unwrap();
         let squares = get_legal_moves_rook(&chess_board, square_index(7, 4));
         assert_eq!(squares, 0x0000100000000000);
 
         // https://lichess.org/editor/6k1/1K4pp/3n4/3B4/p4P1R/PPpqRb2/2P3b1/4Q3_w_-_-_0_1?color=white
-        let chess_board = ChessBoard::new("6k1/1K4pp/3n4/3B4/p4P1R/PPpqRb2/2P3b1/4Q3 w - - 0 1");
+        let chess_board = ChessBoard::new("6k1/1K4pp/3n4/3B4/p4P1R/PPpqRb2/2P3b1/4Q3 w - - 0 1").unwrap();
         let squares = get_legal_moves_rook(&chess_board, square_index(2, 3));
         assert_eq!(squares, 0);
 
         // https://lichess.org/editor/6k1/1K4pp/3n4/3B4/p4P1R/PPpqRb2/2P3b1/4Q3_w_-_-_0_1?color=white
-        let chess_board = ChessBoard::new("4R1k1/6pp/3nr3/3B4/p4q1R/PPpK4/2P3b1/4Q3 b - - 0 1");
+        let chess_board = ChessBoard::new("4R1k1/6pp/3nr3/3B4/p4q1R/PPpK4/2P3b1/4Q3 b - - 0 1").unwrap();
         let squares = get_legal_moves_rook(&chess_board, square_index(5, 3));
         assert_eq!(squares, 0);
 
         // https://lichess.org/editor/2Q1r1k1/6pp/3n4/8/p3Bq1R/PPpK4/2P3b1/8_w_-_-_0_1?color=white
-        let chess_board = ChessBoard::new("2Q1r1k1/6pp/3n4/8/p3Bq1R/PPpK4/2P3b1/8 b - - 0 1");
+        let chess_board = ChessBoard::new("2Q1r1k1/6pp/3n4/8/p3Bq1R/PPpK4/2P3b1/8 b - - 0 1").unwrap();
         let squares = get_legal_moves_rook(&chess_board, square_index(7, 3));
         assert_eq!(squares, 0x3400000000000000);
     }
@@ -362,7 +362,7 @@ mod tests {
     fn test_get_legal_moves_queen() {
         // If both rook and bishop are correct, then queen should be correct too
         // https://lichess.org/editor/4r2p/5Q1p/3k4/2n1P1q1/p4B2/PPpK1R2/6b1/8_w_-_-_0_1?color=white
-        let chess_board = ChessBoard::new("4r2p/5Q1p/3k4/2n1P1q1/p4B2/PPpK1R2/6b1/8 b - - 0 1");
+        let chess_board = ChessBoard::new("4r2p/5Q1p/3k4/2n1P1q1/p4B2/PPpK1R2/6b1/8 b - - 0 1").unwrap();
         let squares = get_legal_moves_rook(&chess_board, square_index(7, 3));
         assert_eq!(squares, 0x0000000800000000);
     }
@@ -370,12 +370,12 @@ mod tests {
     #[test]
     fn test_get_legal_moves_knight() {
         // https://lichess.org/editor/4r2p/1k2Q2p/8/3nP1q1/p4B2/PPpK1R2/6b1/8_w_-_-_0_1?color=white
-        let chess_board = ChessBoard::new("4r2p/1k2Q2p/8/3nP1q1/p4B2/PPpK1R2/6b1/8 b - - 0 1");
+        let chess_board = ChessBoard::new("4r2p/1k2Q2p/8/3nP1q1/p4B2/PPpK1R2/6b1/8 b - - 0 1").unwrap();
         let squares = get_legal_moves_knight(&chess_board, square_index(4, 4));
         assert_eq!(squares, 0x0028000000000000);
 
         // https://lichess.org/editor/4r2p/1k1nQ2p/8/4P1q1/p4B2/PPpK1R2/6b1/8_w_-_-_0_1?color=white
-        let chess_board = ChessBoard::new("4r2p/1k1nQ2p/8/4P1q1/p4B2/PPpK1R2/6b1/8 b - - 0 1");
+        let chess_board = ChessBoard::new("4r2p/1k1nQ2p/8/4P1q1/p4B2/PPpK1R2/6b1/8 b - - 0 1").unwrap();
         let squares = get_legal_moves_knight(&chess_board, square_index(6, 4));
         assert_eq!(squares, 0);
     }
@@ -383,17 +383,17 @@ mod tests {
     #[test]
     fn test_get_legal_moves_pawn() {
         // https://lichess.org/editor/1k2r2p/4Q2p/5n2/6q1/pPp1K3/P2RB3/2p3b1/3B4_w_-_b3_0_1?color=white
-        let chess_board = ChessBoard::new("1k2r2p/4Q2p/5n2/6q1/pPp1K3/P2RB3/2p3b1/3B4 b - b3 0 1");
+        let chess_board = ChessBoard::new("1k2r2p/4Q2p/5n2/6q1/pPp1K3/P2RB3/2p3b1/3B4 b - b3 0 1").unwrap();
         let squares = get_legal_moves_pawn(&chess_board, square_index(3, 5));
         assert_eq!(squares, 0x0000000000700000);
 
         // https://lichess.org/editor/6rp/3R1n1p/p1pQ2k1/8/q3K3/P3B2b/p1P5/3B4_w_-_-_0_1?color=white
-        let chess_board = ChessBoard::new("6rp/3R1n1p/p1pQ2k1/8/q3K3/P3B2b/p1P5/3B4 w - - 0 1");
+        let chess_board = ChessBoard::new("6rp/3R1n1p/p1pQ2k1/8/q3K3/P3B2b/p1P5/3B4 w - - 0 1").unwrap();
         let squares = get_legal_moves_pawn(&chess_board, square_index(1, 5));
         assert_eq!(squares, 0x0000000020000000);
 
         // https://lichess.org/editor/6rp/3R1n1p/p1pQ2k1/8/q1b5/P3B3/p1P1K3/3B4_w_-_-_0_1?color=white
-        let chess_board = ChessBoard::new("6rp/3R1n1p/p1pQ2k1/8/q1b5/P3B3/p1P1K3/3B4 w - - 0 1");
+        let chess_board = ChessBoard::new("6rp/3R1n1p/p1pQ2k1/8/q1b5/P3B3/p1P1K3/3B4 w - - 0 1").unwrap();
         let squares = get_legal_moves_pawn(&chess_board, square_index(1, 5));
         assert_eq!(squares, 0);
     }
@@ -401,22 +401,22 @@ mod tests {
     #[test]
     fn test_get_legal_moves_king() {
         // https://lichess.org/editor/6rp/5n1p/p1pQ2k1/8/q1b5/P3B3/p1P5/3BK2R_w_K_-_0_1?color=white
-        let chess_board = ChessBoard::new("6rp/5n1p/p1pQ2k1/8/q1b5/P3B3/p1P5/3BK2R w K - 0 1");
+        let chess_board = ChessBoard::new("6rp/5n1p/p1pQ2k1/8/q1b5/P3B3/p1P5/3BK2R w K - 0 1").unwrap();
         let squares = get_legal_moves_king(&chess_board, square_index(0, 3));
         assert_eq!(squares, 0x0000000000001400);
 
         // https://lichess.org/editor/1r2n2p/5k1p/p1pQ4/8/2B2q2/P2bB3/p1P5/R3K3_w_Q_-_0_1?color=white
-        let chess_board = ChessBoard::new("1r2n2p/5k1p/p1pQ4/8/2B2q2/P2bB3/p1P5/R3K3 w Q - 0 1");
+        let chess_board = ChessBoard::new("1r2n2p/5k1p/p1pQ4/8/2B2q2/P2bB3/p1P5/R3K3 w Q - 0 1").unwrap();
         let squares = get_legal_moves_king(&chess_board, square_index(0, 3));
         assert_eq!(squares, 0x0000000000001030);
 
         // https://lichess.org/editor/r3k2r/3p3p/p3B3/8/5b2/PQ5q/p7/R3K2R_b_KQkq_-_0_1?color=white
-        let chess_board = ChessBoard::new("r3k2r/3p3p/p3B3/8/5b2/PQ5q/p7/R3K2R b KQkq - 0 1");
+        let chess_board = ChessBoard::new("r3k2r/3p3p/p3B3/8/5b2/PQ5q/p7/R3K2R b KQkq - 0 1").unwrap();
         let squares = get_legal_moves_king(&chess_board, square_index(7, 3));
         assert_eq!(squares, 0x3408000000000000);
 
         // https://lichess.org/editor/8/8/8/8/8/8/8/RN2K3_w_Q_-_0_1?color=white
-        let chess_board = ChessBoard::new("8/8/8/8/8/8/8/RN2K3 w Q - 0 1");
+        let chess_board = ChessBoard::new("8/8/8/8/8/8/8/RN2K3 w Q - 0 1").unwrap();
         let squares = get_legal_moves_king(&chess_board, square_index(0, 3));
         assert_eq!(squares, 0x0000000000001C14);
     }

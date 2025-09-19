@@ -5,7 +5,6 @@ use crate::core::chess_board as internal;
 pub use crate::core::board::{ BOARD_SIZE, BOARD_FILES, BOARD_RANKS };
 pub use crate::core::piece::{ PieceType, PieceColor };
 
-
 #[derive(Debug)]
 pub enum GameState {
     Win(PieceColor),
@@ -28,12 +27,16 @@ pub struct ChessBoard {
 impl ChessBoard {
     const INITIAL_POSITION_FEN: &'static str = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
-    pub fn new(fen: Option<&str>) -> Self {
+    pub fn new(fen: Option<&str>) -> Option<Self> {
         let inner = internal::ChessBoard::new(match fen {
             None => ChessBoard::INITIAL_POSITION_FEN,
             Some(fen) => fen
         });
-        Self { inner }
+
+        match inner {
+            None => None,
+            Some(inner) => Some(Self{ inner }),
+        }
     }
 
     pub fn square(&self, rank: Rank, file: File) -> Square<'_> {

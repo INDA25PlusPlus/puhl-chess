@@ -18,9 +18,8 @@ pub struct ChessBoard {
 }
 
 impl ChessBoard {
-    /// Assumes a valid fen string, otherwise program will panic
-    // TODO: Maybe return result instead of panic on failure, even though it will essentially only be used for testing purposes
-    pub fn new(fen: &str) -> ChessBoard {
+    // TODO: Return result instead
+    pub fn new(fen: &str) -> Option<ChessBoard> {
         let mut chess_board: ChessBoard = ChessBoard { 
             all_pieces: [0, 0],
             current_color: PieceColor::White, 
@@ -32,7 +31,7 @@ impl ChessBoard {
             pieces: [0; PIECE_TYPE_COUNT],
         };
 
-        pub fn handle_placement_encoding(placement: &str, chess_board: &mut ChessBoard) {
+        pub fn handle_placement_encoding(placement: &str, chess_board: &mut ChessBoard) -> bool {
             let mut square_index: usize = BOARD_SIZE;
             for rank in placement.split("/") {
                 for chr in rank.chars() {
@@ -52,7 +51,7 @@ impl ChessBoard {
                             'R' | 'r' => &mut chess_board.pieces[PieceType::Rook as usize],
                             'Q' | 'q' => &mut chess_board.pieces[PieceType::Queen as usize],
                             'K' | 'k' => &mut chess_board.pieces[PieceType::King as usize],
-                            _ => unreachable!(),
+                            _ => return false,
                     };
                     let all_board= match chr.is_uppercase() {
                         true => &mut chess_board.all_pieces[PieceColor::White as usize],
@@ -63,6 +62,7 @@ impl ChessBoard {
                     *piece_type |= square;
                 }
             }
+            return true;
         }
 
         fn handle_turn_encoding(turn: &str, chess_board: &mut ChessBoard) {
@@ -100,16 +100,26 @@ impl ChessBoard {
 
         for (i, field) in fen.split_whitespace().enumerate() {
             match i {
-                0 => handle_placement_encoding(field, &mut chess_board),
+                0 => if !handle_placement_encoding(field, &mut chess_board) { return None; },
                 1 => handle_turn_encoding(field, &mut chess_board),
                 2 => handle_castling_availability_encoding(field, &mut chess_board),
                 3 => handle_en_passant_encoding(field, &mut chess_board),
-                4 => { chess_board.half_moves = field.parse().unwrap() },
-                5 => { chess_board.full_moves = field.parse().unwrap() },
-                _ => unreachable!("Given FEN string is invalid: {}", fen)
+                4 => { 
+                    chess_board.half_moves = match field.parse() {
+                        Err(_) => return None,
+                        Ok(val) => val,
+                    }
+                },
+                5 => { 
+                    chess_board.full_moves = match field.parse() {
+                        Err(_) => return None,
+                        Ok(val) => val,
+                    }
+                },
+                _ => return None,
             }
         }
-        chess_board
+        Some(chess_board)
     }
 
     pub const fn all_pieces(&self) -> BitBoard {
@@ -294,7 +304,7 @@ mod tests {
     #[test]
     fn test_fen_decoding() {
         // Chess start position
-        let chess_board = ChessBoard::new("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+        let chess_board = ChessBoard::new("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1").unwrap();
         assert_eq!(chess_board.pieces[PieceType::Pawn as usize], 0x00ff00000000ff00);
         assert_eq!(chess_board.pieces[PieceType::Knight as usize], 0x4200000000000042);
         assert_eq!(chess_board.pieces[PieceType::Bishop as usize], 0x2400000000000024);
@@ -308,7 +318,7 @@ mod tests {
         assert_eq!(chess_board.half_moves, 0);
         assert_eq!(chess_board.full_moves, 1);
 
-        let chess_board = ChessBoard::new("rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1");
+        let chess_board = ChessBoard::new("rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1").unwrap();
         assert_eq!(chess_board.pieces[PieceType::Pawn as usize], 0x00ff00000800F700);
         assert_eq!(chess_board.pieces[PieceType::Knight as usize], 0x4200000000000042);
         assert_eq!(chess_board.pieces[PieceType::Bishop as usize], 0x2400000000000024);
@@ -323,7 +333,7 @@ mod tests {
         assert_eq!(chess_board.full_moves, 1);
 
         // https://lichess.org/editor/8/3k3p/2n2Pp1/2bq1bK1/p2P2PR/P1p2P2/1RP5/3BQ3_w_-_-_0_1?color=white
-        let chess_board = ChessBoard::new("8/3k3p/2n2Pp1/2bq1bK1/p2P2PR/P1p2P2/1RP5/3BQ3 w - - 0 1");
+        let chess_board = ChessBoard::new("8/3k3p/2n2Pp1/2bq1bK1/p2P2PR/P1p2P2/1RP5/3BQ3 w - - 0 1").unwrap();
         assert_eq!(chess_board.pieces[PieceType::Pawn as usize], 0x1060092A42000);
         assert_eq!(chess_board.pieces[PieceType::Knight as usize], 0x0000200000000000);
         assert_eq!(chess_board.pieces[PieceType::Bishop as usize], 0x0000002400000010);
