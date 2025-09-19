@@ -29,4 +29,11 @@ impl Index {
         (1 as BitBoard) << self.get()
     }
 
+    pub fn get_rank(&self) -> Rank {
+        Rank::new(rank_index(self.get())).unwrap()
+    }
+
+    pub fn get_file(&self) -> File {
+        File::new(file_index(self.get())).unwrap()
+    }
 }

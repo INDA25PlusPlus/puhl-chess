@@ -5,6 +5,7 @@ use crate::mv::*;
 use crate::core::board::*;
 use crate::core::move_generation::*;
 
+/// Struct representing a Square on the ChessBoard
 pub struct Square<'a> {
     pub chess_board: &'a ChessBoard,
     pub rank: Rank,
@@ -12,10 +13,14 @@ pub struct Square<'a> {
 }
 
 impl<'a> Square<'a> {
+    /// Returns if square should be light or dark
+    /// For example white king start position should always be on dark square
     pub fn dark_color(&self) -> bool {
         self.as_index().get() % 2 != 0 
     }
 
+    /// Returns the piece type on the square
+    /// Returns None if no piece on the square
     pub fn piece_type(&self) -> Option<PieceType> {
         let bb_square = self.as_index().as_bb();
         if !self.chess_board.inner.has_square_piece(bb_square) {
@@ -24,6 +29,8 @@ impl<'a> Square<'a> {
         Some(self.chess_board.inner.get_piece_type(bb_square))
     }
 
+    /// Returns the color of the piece on the square
+    /// Returns None if no piece on the square
     pub fn piece_color(&self) -> Option<PieceColor> {
         let bb_square = self.as_index().as_bb();
         if !self.chess_board.inner.has_square_piece(bb_square) {
@@ -32,11 +39,13 @@ impl<'a> Square<'a> {
         Some(self.chess_board.inner.get_piece_color(bb_square))
     }
 
-    fn as_index(&self) -> Index {
+    /// Returns the square position as an index
+    pub fn as_index(&self) -> Index {
         // Abort if this returns null, this should not happen
         Index::new(self.rank.get() * BOARD_FILES + self.file.get()).unwrap()
     } 
 
+    /// Returns all legal moves as a vector
     pub fn get_moves(&self) -> Option<Vec<Move<'a>>> {
         let bb_square = self.as_index().as_bb();
         if !self.chess_board.inner.has_square_movable_piece(bb_square) {

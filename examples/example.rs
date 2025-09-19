@@ -2,7 +2,6 @@ use std::{io};
 use chess_game::*;
 
 fn read_two_numbers() -> (i32, i32) {
-    // Read two numbers
     let mut input = String::new();
     io::stdin().read_line(&mut input).unwrap();
     let nums: Vec<i32> = input
@@ -15,7 +14,6 @@ fn read_two_numbers() -> (i32, i32) {
 }
 
 fn read_one_number() -> i32 {
-    // Read one number
     let mut input = String::new();
     input.clear();
     io::stdin().read_line(&mut input).unwrap();
@@ -49,7 +47,10 @@ fn main() {
         };
     
         let idx = read_one_number() as usize;
-        let (result, move_type) = moves[idx].make_move();
+        let chess_move = &moves[idx];
+        println!("Rank: {:?}", chess_move.src.get_rank());
+        println!("File: {:?}", chess_move.src.get_file());
+        let (result, move_type) = chess_move.make_move();
         println!("{:?}", move_type);
         match result {
             MoveResult::PawnPromotionResolver(resolver) => {
