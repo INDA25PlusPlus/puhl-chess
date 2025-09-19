@@ -25,7 +25,9 @@ pub enum MoveResult {
 
 /// Represents a chess move
 /// Contains the move source index the move destination index and a reference to the board the move was made on
+#[derive(Debug)]
 pub struct Move<'a> {
+
     pub src: Index,
     pub dst: Index,
     pub chess_board: &'a ChessBoard,
