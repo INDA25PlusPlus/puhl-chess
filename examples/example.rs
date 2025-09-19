@@ -1,3 +1,4 @@
+/// Simple chess program showing how to use the chess library interface
 use std::{io};
 use chess_game::*;
 
@@ -23,23 +24,29 @@ fn read_one_number() -> i32 {
 }
 
 fn main() {
-    let mut chess_board = ChessBoard::new(Some("k7/7R/8/8/8/8/N4B2/3K4 w - - 0 1")).unwrap();
+    let mut chess_board = ChessBoard::new(None).unwrap();
 
     loop {
         let (rank, file) = read_two_numbers();
+        // Retrievees the square which the user specifed
         let square = chess_board.square(Rank::new(rank as usize).unwrap(), File::new(file as usize).unwrap());
+        // Retrieves state info about the chess board
         let info = chess_board.info();
+        // Checks if it a draw or win
         match info.game_state {
             GameState::Draw => println!("Draw!"),
             GameState::Win(color) => println!("{:?} side won!", color),
             GameState::Playing => (),
         }
+        // Prints some stuff about the board state
         println!("{:?}", info.player_turn);
     
+        // Prints some informatin about the retrieved square
         println!("{}", square.dark_color());
         println!("{:?}", square.piece_color());
         println!("{:?}", square.piece_type());
     
+        // Retrieves the legal moves which the piece on the square can do    
         let moves = square.get_moves();
         let moves = match moves {
             None => unreachable!(),
@@ -47,12 +54,18 @@ fn main() {
         };
     
         let idx = read_one_number() as usize;
+        // Selects the move which user specified
         let chess_move = &moves[idx];
-        println!("Rank: {:?}", chess_move.src.get_rank());
-        println!("File: {:?}", chess_move.src.get_file());
+        // Prints some information about the chess move
+        println!("Source Rank: {:?}", chess_move.src.get_rank());
+        println!("Source File: {:?}", chess_move.src.get_file());
+        println!("Destination Rank: {:?}", chess_move.dst.get_rank());
+        println!("Destination File: {:?}", chess_move.dst.get_file());
+        // Makes the chess move and returns a clone of the chess board with the move performed
         let (result, move_type) = chess_move.make_move();
         println!("{:?}", move_type);
         match result {
+            // Resolves the promotion based on what the user specified
             MoveResult::PawnPromotionResolver(resolver) => {
                 let idx = read_one_number() as usize;
                 let (new_chess_board, move_type) = match idx {
@@ -65,6 +78,7 @@ fn main() {
                 println!("{:?}", move_type);
                 chess_board = new_chess_board;
             }
+            // Sets the old board equal to the new clone and do the loop again
             MoveResult::ChessBoard(new_chess_board) => {
                 chess_board = new_chess_board
             }
