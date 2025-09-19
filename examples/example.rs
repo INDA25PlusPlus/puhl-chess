@@ -1,5 +1,5 @@
 use std::{io};
-use chess_game::chess_board::*;
+use chess_game::*;
 
 fn read_two_numbers() -> (i32, i32) {
     // Read two numbers
@@ -12,7 +12,6 @@ fn read_two_numbers() -> (i32, i32) {
     let (a, b) = (nums[0], nums[1]);
 
     (a, b)
-    // println!("First two numbers: {}, {}", a, b);
 }
 
 fn read_one_number() -> i32 {
@@ -21,6 +20,7 @@ fn read_one_number() -> i32 {
     input.clear();
     io::stdin().read_line(&mut input).unwrap();
     let c: i32 = input.trim().parse().unwrap();
+    
     c
 }
 
@@ -31,6 +31,11 @@ fn main() {
         let (rank, file) = read_two_numbers();
         let square = chess_board.square(Rank::new(rank as usize).unwrap(), File::new(file as usize).unwrap());
         let info = chess_board.info();
+        match info.game_state {
+            GameState::Draw => println!("Draw!"),
+            GameState::Win(color) => println!("{:?} side won!", color),
+            GameState::Playing => (),
+        }
         println!("{:?}", info.player_turn);
     
         println!("{}", square.dark_color());
@@ -64,11 +69,4 @@ fn main() {
             }
         }
     }
-
-    let square = chess_board.square(Rank::new(0).unwrap(), File::new(0).unwrap());
-    let info = chess_board.info();
-    println!("{:?}", info.is_current_player_in_check);
-    // let moves = .get_moves(); 
-    // moves
-    // let chess_board = moves[0].make_move();
 }
