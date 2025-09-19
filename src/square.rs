@@ -46,6 +46,8 @@ impl<'a> Square<'a> {
     } 
 
     /// Returns all legal moves as a vector
+    /// Returns an empty vector if there are no legal moves
+    /// Returns None if the selected piece does not contain a piece which the current side can move
     pub fn get_moves(&self) -> Option<Vec<Move<'a>>> {
         let bb_square = self.as_index().as_bb();
         if !self.chess_board.inner.has_square_movable_piece(bb_square) {
