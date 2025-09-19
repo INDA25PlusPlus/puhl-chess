@@ -32,9 +32,9 @@ pub struct Move<'a> {
 }
 
 impl<'a> Move<'a> {
-    /// Performs the move on a copy of the referenced chess board
+    /// Performs the move on a CLONE of the referenced chess board
     /// Returns a MoveResult and a MoveType
-    /// MoveResult will just be the copied chess board with the move perfomed, except when there is a promotion
+    /// MoveResult will just be the CLONED chess board with the move perfomed, except when there is a promotion
     ///     Then it will return a PawnPromotionResolver
     pub fn make_move(&self) -> (MoveResult, MoveType) {
         let bb_dst = (1 as BitBoard) << self.dst.get();
