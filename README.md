@@ -60,5 +60,5 @@ For a practical demonstration, check out the [example](https://github.com/INDA25
 It shows how to set up a game, query moves, make them, and handle promotions.
 
 ## Testing
-The library is tested on all positions in [Perft Results](https://www.chessprogramming.org/Perft_Results) up to a depth of 5.  
+The library is tested on all positions from [Perft Results](https://www.chessprogramming.org/Perft_Results) up to a depth of 5.  
 See [tests/perft.rs](https://github.com/INDA25PlusPlus/puhl-chess/blob/main/tests/perft.rs) for details.
